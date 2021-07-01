@@ -9,6 +9,39 @@ namespace AtCoder.Lib
 		public static readonly long mod = 1000000007;
 		//public static readonly long mod = 13;
 
+		public static (long[] fac, long[] finv, long[] inv) ModBinomialCoefficientsInit(int MAX = 510000, int MOD = 1000000007)
+		{
+			var fac = new long[MAX];
+			var finv = new long[MAX];
+			var inv = new long[MAX];
+
+			fac[0] = fac[1] = 1;
+			finv[0] = finv[1] = 1;
+			inv[1] = 1;
+			for (int i = 2; i < MAX; i++)
+			{
+				fac[i] = fac[i - 1] * i % MOD;
+				inv[i] = MOD - inv[MOD % i] * (MOD / i) % MOD;
+				finv[i] = finv[i - 1] * inv[i] % MOD;
+			}
+
+			return (fac, finv, inv);
+		}
+
+		// 二項係数計算
+		public static long ModBinomialCoefficients(
+			int n,
+			int k,
+			long[] fac,
+			long[] finv,
+			long[] inv,
+			int MOD = 1000000007)
+		{
+			if (n < k) return 0;
+			if (n < 0 || k < 0) return 0;
+			return fac[n] * (finv[k] * finv[n - k] % MOD) % MOD;
+		}
+
 		public static long Pow(long a, long b)
 		{
 			var temp = a;
