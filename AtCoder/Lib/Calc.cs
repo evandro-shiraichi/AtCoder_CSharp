@@ -172,5 +172,20 @@ namespace AtCoder.Lib
                 }
             }
         }
+
+        public static IEnumerable<int> Sieves(int maxnum)
+        {
+            int[] sieve = Enumerable.Range(0, maxnum + 1).ToArray();
+            sieve[1] = 0;  // 0 : 素数ではない
+            int squareroot = (int)Math.Sqrt(maxnum);
+            for (int i = 2; i <= squareroot; i++)
+            {
+                if (sieve[i] <= 0)
+                    continue;
+                for (int n = i * 2; n <= maxnum; n += i)
+                    sieve[n] = 0;
+            }
+            return sieve.Where(n => n > 0);
+        }
     }
 }
