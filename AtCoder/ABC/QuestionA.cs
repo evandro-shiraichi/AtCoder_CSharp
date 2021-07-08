@@ -30,9 +30,12 @@ namespace AtCoder.ABC
 
 			public Scanner(string file = "")
 			{
-				if (string.IsNullOrWhiteSpace(file)) {
+				if (string.IsNullOrWhiteSpace(file))
+				{
 					reader_ = Console.ReadLine;
-				} else {
+				}
+				else
+				{
 					filePath_ = file;
 					var fs = new StreamReader(file);
 					reader_ = fs.ReadLine;
@@ -44,17 +47,20 @@ namespace AtCoder.ABC
 			public string NextLine() => reader_();
 			public string Next()
 			{
-				if (index_ < buf_.Length) {
+				if (index_ < buf_.Length)
+				{
 					return buf_[index_++];
 				}
 
 				string st = reader_();
-				while (st == "") {
+				while (st == "")
+				{
 					st = reader_();
 				}
 
 				buf_ = st.Split(delimiter_, StringSplitOptions.RemoveEmptyEntries);
-				if (buf_.Length == 0) {
+				if (buf_.Length == 0)
+				{
 					return Next();
 				}
 
@@ -69,7 +75,8 @@ namespace AtCoder.ABC
 			public int[] ArrayInt(int N, int add = 0)
 			{
 				int[] Array = new int[N];
-				for (int i = 0; i < N; i++) {
+				for (int i = 0; i < N; i++)
+				{
 					Array[i] = Int() + add;
 				}
 				return Array;
@@ -79,9 +86,12 @@ namespace AtCoder.ABC
 			{
 				var array = ArrayInt(N, add);
 
-				if (descendingOrder) {
+				if (descendingOrder)
+				{
 					Array.Sort(array, (x, y) => y.CompareTo(x));
-				} else {
+				}
+				else
+				{
 					Array.Sort(array);
 				}
 
@@ -91,7 +101,8 @@ namespace AtCoder.ABC
 			public T[] ArrayIntTo<T>(int N, Func<int, T> converter, int add = 0)
 			{
 				T[] Array = new T[N];
-				for (int i = 0; i < N; i++) {
+				for (int i = 0; i < N; i++)
+				{
 					Array[i] = converter(Int() + add);
 				}
 				return Array;
@@ -100,7 +111,8 @@ namespace AtCoder.ABC
 			public long[] ArrayLong(int N, long add = 0)
 			{
 				long[] Array = new long[N];
-				for (int i = 0; i < N; i++) {
+				for (int i = 0; i < N; i++)
+				{
 					Array[i] = Long() + add;
 				}
 				return Array;
@@ -110,9 +122,12 @@ namespace AtCoder.ABC
 			{
 				var array = ArrayLong(N, add);
 
-				if (descendingOrder) {
+				if (descendingOrder)
+				{
 					Array.Sort(array, (x, y) => y.CompareTo(x));
-				} else {
+				}
+				else
+				{
 					Array.Sort(array);
 				}
 
@@ -122,7 +137,8 @@ namespace AtCoder.ABC
 			public T[] ArrayLongTo<T>(int N, Func<long, T> converter, int add = 0)
 			{
 				T[] Array = new T[N];
-				for (int i = 0; i < N; i++) {
+				for (int i = 0; i < N; i++)
+				{
 					Array[i] = converter(Long() + add);
 				}
 				return Array;
@@ -131,7 +147,8 @@ namespace AtCoder.ABC
 			public double[] ArrayDouble(int N, double add = 0)
 			{
 				double[] Array = new double[N];
-				for (int i = 0; i < N; i++) {
+				for (int i = 0; i < N; i++)
+				{
 					Array[i] = Double() + add;
 				}
 				return Array;
@@ -141,9 +158,12 @@ namespace AtCoder.ABC
 			{
 				var array = ArrayDouble(N, add);
 
-				if (descendingOrder) {
+				if (descendingOrder)
+				{
 					Array.Sort(array, (x, y) => y.CompareTo(x));
-				} else {
+				}
+				else
+				{
 					Array.Sort(array);
 				}
 
@@ -153,7 +173,8 @@ namespace AtCoder.ABC
 			public T[] ArrayDoubleTo<T>(int N, Func<double, T> converter, int add = 0)
 			{
 				T[] Array = new T[N];
-				for (int i = 0; i < N; i++) {
+				for (int i = 0; i < N; i++)
+				{
 					Array[i] = converter(Double() + add);
 				}
 				return Array;
@@ -163,7 +184,8 @@ namespace AtCoder.ABC
 			{
 				var array = new string[h];
 
-				for (int i = 0; i < h; i++) {
+				for (int i = 0; i < h; i++)
+				{
 					array[i] = Next();
 				}
 
@@ -174,7 +196,8 @@ namespace AtCoder.ABC
 			{
 				var array = new T[h];
 
-				for (int i = 0; i < h; i++) {
+				for (int i = 0; i < h; i++)
+				{
 					array[i] = converter(Next());
 				}
 
@@ -185,7 +208,8 @@ namespace AtCoder.ABC
 			{
 				var map = new int[h][];
 
-				for(int i = 0; i < h; i++) {
+				for (int i = 0; i < h; i++)
+				{
 					map[i] = ArrayInt(w, add);
 				}
 
@@ -196,7 +220,8 @@ namespace AtCoder.ABC
 			{
 				var map = new T[h][];
 
-				for (int i = 0; i < h; i++) {
+				for (int i = 0; i < h; i++)
+				{
 					map[i] = ArrayIntTo(w, converter, add);
 				}
 
@@ -207,7 +232,8 @@ namespace AtCoder.ABC
 			{
 				var map = new long[h][];
 
-				for (int i = 0; i < h; i++) {
+				for (int i = 0; i < h; i++)
+				{
 					map[i] = ArrayLong(w, add);
 				}
 
@@ -218,7 +244,8 @@ namespace AtCoder.ABC
 			{
 				var map = new T[h][];
 
-				for (int i = 0; i < h; i++) {
+				for (int i = 0; i < h; i++)
+				{
 					map[i] = ArrayLongTo(w, converter, add);
 				}
 
@@ -229,7 +256,8 @@ namespace AtCoder.ABC
 			{
 				var map = new double[h][];
 
-				for (int i = 0; i < h; i++) {
+				for (int i = 0; i < h; i++)
+				{
 					map[i] = ArrayDouble(w, add);
 				}
 
@@ -240,7 +268,8 @@ namespace AtCoder.ABC
 			{
 				var map = new T[h][];
 
-				for (int i = 0; i < h; i++) {
+				for (int i = 0; i < h; i++)
+				{
 					map[i] = ArrayDoubleTo(w, converter, add);
 				}
 
@@ -276,10 +305,11 @@ namespace AtCoder.ABC
 			{
 				return (Double() + add, Double() + add, Double() + add);
 			}
-			
+
 			public void Save(string text)
 			{
-				if (string.IsNullOrWhiteSpace(filePath_)) {
+				if (string.IsNullOrWhiteSpace(filePath_))
+				{
 					return;
 				}
 
@@ -297,7 +327,8 @@ namespace AtCoder.ABC
 
 			public static T[] Fill<T>(T[] array, Func<T> intialValue)
 			{
-				for(int i = 0; i < array.Length; i++) {
+				for (int i = 0; i < array.Length; i++)
+				{
 					array[i] = intialValue();
 				}
 
@@ -319,8 +350,9 @@ namespace AtCoder.ABC
 			{
 				var map = new T[h][];
 
-				for(int i = 0; i < h; i++) {
-					map[i] = new T[w]; 
+				for (int i = 0; i < h; i++)
+				{
+					map[i] = new T[w];
 				}
 
 				return map;
@@ -330,7 +362,8 @@ namespace AtCoder.ABC
 			{
 				var h = map.Length;
 
-				for(int i = 0; i < h; i++) {
+				for (int i = 0; i < h; i++)
+				{
 					Fill(map[i], initialValue);
 				}
 
@@ -349,7 +382,8 @@ namespace AtCoder.ABC
 
 			public static void WriteMap<T>(IEnumerable<IEnumerable<T>> map, string sep)
 			{
-				foreach(var array in map) {
+				foreach (var array in map)
+				{
 					WriteArray(array, sep);
 				}
 			}
@@ -360,7 +394,8 @@ namespace AtCoder.ABC
 
 			public static void WriteMap<T, R>(IEnumerable<IEnumerable<T>> map, string sep, Func<T, R> converter)
 			{
-				foreach (var array in map) {
+				foreach (var array in map)
+				{
 					WriteArray(array, sep, converter);
 				}
 			}

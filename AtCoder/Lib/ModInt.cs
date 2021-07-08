@@ -110,17 +110,17 @@ namespace AtCoder.Lib
 		}
 
 		// 二項係数計算
-		public long BinomialCoefficients(int k)
+		public long BinomialCoefficients(int n, int k)
 		{
-			if (Number < k) return 0;
-			if (Number < 0 || k < 0) return 0;
+			if (n < k) return 0;
+			if (n < 0 || k < 0) return 0;
 
 			if (fac_ is null)
 			{
 				BinomialCoefficientsInit();
 			}
 
-			return fac_[Number] * (finv_[k] * finv_[Number - k] % MOD) % MOD;
+			return fac_[n] * (finv_[k] * finv_[n - k] % MOD) % MOD;
 		}
 
 		private (long[] fac, long[] finv, long[] inv) BinomialCoefficientsInit()
