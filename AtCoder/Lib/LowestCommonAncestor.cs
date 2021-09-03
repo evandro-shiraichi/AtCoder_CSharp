@@ -67,17 +67,22 @@ namespace AtCoder.Lib
 				return node;
 			}
 
-			var k = 1;
-			var count = 0;
+			var k = GetMaxPow(n);
 
-			while ((k << 1) <= n)
-			{
-				k <<= 1;
-				count++;
-			}
-
-			return Query(parents_[node][count], n - k);
+			return Query(parents_[node][k], n - (1 << k));
 		}
+
+		private int GetMaxPow(int n)
+        {
+			var k = 0;
+
+			while((1 << (k + 1)) <= n)
+            {
+				k++;
+            }
+
+			return k;
+        }
 
 		public int GetRoot(int node1, int node2)
 		{
@@ -93,13 +98,13 @@ namespace AtCoder.Lib
 			}
 
 			var ng = -1;
-			var ok = depthes_[a] + 1;
+			var ok = depthes_[a];
 
 			while (Math.Abs(ng - ok) > 1)
 			{
 				var c = (ng + ok) / 2;
 
-				if (Query(a, c + 1) == Query(b, c + 1))
+				if (Query(a, c) == Query(b, c))
 				{
 					ok = c;
 				}
@@ -109,7 +114,7 @@ namespace AtCoder.Lib
 				}
 			}
 
-			return Query(a, ok + 1);
+			return Query(a, ok);
 		}
 
 		public int GetDepth(int node)
