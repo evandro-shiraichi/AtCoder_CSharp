@@ -8,6 +8,36 @@ using System.Threading.Tasks;
 
 namespace AtCoder.Lib
 {
+	class DoDijkstraClass
+	{
+		long[] DoDijkstra(List<(int To, int Cost)>[] edg, int start)
+		{
+			var minCosts = Enumerable.Repeat(long.MaxValue, edg.Length).ToArray();
+
+			minCosts[start] = 0;
+
+			var pQueue = new PriorityQueue<(int To, long Cost), long>(x => x.Cost, true);
+			pQueue.Enqueue((start, 0L));
+
+			while (pQueue.Count > 0)
+			{
+				var (now, cost) = pQueue.Deque();
+
+				foreach (var (next, nextCost) in edg[now])
+				{
+					var newCost = cost + nextCost;
+					if (minCosts[next] > newCost)
+					{
+						pQueue.Enqueue((next, newCost));
+						minCosts[next] = newCost;
+					}
+				}
+			}
+
+			return minCosts;
+		}
+	}
+
 	class PriorityQueue<TObject, TPriority> where TPriority : IComparable<TPriority>
 	{
 		private readonly Func<TObject, TPriority> selector_;

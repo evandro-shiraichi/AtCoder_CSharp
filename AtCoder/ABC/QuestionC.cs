@@ -18,7 +18,7 @@ namespace AtCoder.ABC
 		{
 			var scanner = new Scanner();
 		}
-		 
+
 		class Scanner
 		{
 			private readonly char[] delimiter_ = new char[] { ' ' };
