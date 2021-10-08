@@ -24,13 +24,13 @@ namespace AtCoder.Lib
 			{
 				if (i < 0 || i >= Count)
 					throw new ArgumentOutOfRangeException();
-				return _array[(_firstIndex + i) % _capacity];
+				return _array[ToIndex(_firstIndex + 1 + i)];
 			}
 			set
 			{
 				if (i < 0 || i >= Count)
 					throw new ArgumentOutOfRangeException();
-				_array[(_firstIndex + i) % _capacity] = value;
+				_array[ToIndex(_firstIndex + 1 + i)] = value;
 			}
 		}
 
@@ -92,10 +92,10 @@ namespace AtCoder.Lib
 		{
 			var newArray = new T[_capacity * 2];
 
-			for (int i = _firstIndex; i < _lastIndex; i++)
+			for (int i = _firstIndex; i < _lastIndex - 1; i++)
 			{
 				var index = i - _firstIndex;
-				newArray[index] = _array[ToIndex(i)];
+				newArray[index] = _array[ToIndex(i + 1)];
 			}
 			_firstIndex = -1;
 			_lastIndex = _capacity;
