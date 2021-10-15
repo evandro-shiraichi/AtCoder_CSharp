@@ -113,70 +113,6 @@ namespace AtCoder.ABC {
 		}
 	}
 
-	abstract class MathProvider<T> {
-		public abstract T Divide(T a, T b);
-		public abstract T Multiply(T a, T b);
-		public abstract T Add(T a, T b);
-		public abstract T Negate(T a);
-		public virtual T Subtract(T a, T b) {
-			return Add(a, Negate(b));
-		}
-	}
-
-	class DoubleMathProvider : MathProvider<double> {
-		public override double Divide(double a, double b) {
-			return a / b;
-		}
-
-		public override double Multiply(double a, double b) {
-			return a * b;
-		}
-
-		public override double Add(double a, double b) {
-			return a + b;
-		}
-
-		public override double Negate(double a) {
-			return -a;
-		}
-	}
-
-	class IntMathProvider : MathProvider<int> {
-		public override int Divide(int a, int b) {
-			return a / b;
-		}
-
-		public override int Multiply(int a, int b) {
-			return a * b;
-		}
-
-		public override int Add(int a, int b) {
-			return a + b;
-		}
-
-		public override int Negate(int a) {
-			return -a;
-		}
-	}
-
-	class LongMathProvider : MathProvider<long> {
-		public override long Divide(long a, long b) {
-			return a / b;
-		}
-
-		public override long Multiply(long a, long b) {
-			return a * b;
-		}
-
-		public override long Add(long a, long b) {
-			return a + b;
-		}
-
-		public override long Negate(long a) {
-			return -a;
-		}
-	}
-
 	static class HelperExtensions {
 		public static void UpdateMax(this ref int max, int val) {
 			max = Math.Max(max, val);
@@ -199,7 +135,7 @@ namespace AtCoder.ABC {
 		}
 	}
 
-	static class ArrayHelper {
+	public static class ArrayHelper {
 		public static T[] CreateArray<T>(int w) {
 			var array = new T[w];
 			return array;
@@ -350,6 +286,58 @@ namespace AtCoder.ABC {
 		public static void WriteMap<T, R>(IEnumerable<IEnumerable<T>> map, string sep, Func<T, R> converter) {
 			foreach (var array in map)
 				WriteArray(array, sep, converter);
+		}
+
+		private static int LowerBoundCore<T>(IList<T> array, T lowerValue, Func<T, T, int> comaparer) {
+			var (ng, ok) = (-1, array.Count);
+
+			while (Math.Abs(ok - ng) > 1) {
+				var c = (ng + ok) / 2;
+
+				if (comaparer(array[c], lowerValue) >= 0) {
+					ok = c;
+				} else {
+					ng = c;
+				}
+			}
+
+			if (ok == array.Count) {
+				ok = -1;
+			}
+
+			return ok;
+		}
+
+		public static int LowerBound<T>(this IList<T> array, T lowerValue)
+			where T : IComparable {
+			return LowerBoundCore(array, lowerValue, (x, y) => x.CompareTo(y));
+		}
+
+		public static int LowerBound<T>(this IList<T> array, T lowerValue, Func<T, T, int> comparer) {
+			return LowerBoundCore(array, lowerValue, comparer);
+		}
+
+		public static List<T> LongestIncreasingSubsequense<T>(IList<T> array)
+			where T : IComparable {
+			var list = new List<T>();
+
+			foreach (var a in array) {
+				var index = list.LowerBound(a);
+
+				if (index == -1) {
+					list.Add(a);
+				} else {
+					list[index] = a;
+				}
+			}
+
+			return list;
+		}
+	}
+
+	public static class MathHelper {
+		public static int GetDist2(int x1, int y1, int x2, int y2) {
+			return ((x1 - x2) * (x1 - x2)) + ((y1 - y2) * (y1 - y2));
 		}
 	}
 
@@ -575,6 +563,70 @@ namespace AtCoder.ABC {
 				return;
 
 			File.WriteAllText(filePath_ + "_output.txt", text);
+		}
+	}
+
+	class DoubleMathProvider : MathProvider<double> {
+		public override double Divide(double a, double b) {
+			return a / b;
+		}
+
+		public override double Multiply(double a, double b) {
+			return a * b;
+		}
+
+		public override double Add(double a, double b) {
+			return a + b;
+		}
+
+		public override double Negate(double a) {
+			return -a;
+		}
+	}
+
+	class IntMathProvider : MathProvider<int> {
+		public override int Divide(int a, int b) {
+			return a / b;
+		}
+
+		public override int Multiply(int a, int b) {
+			return a * b;
+		}
+
+		public override int Add(int a, int b) {
+			return a + b;
+		}
+
+		public override int Negate(int a) {
+			return -a;
+		}
+	}
+
+	class LongMathProvider : MathProvider<long> {
+		public override long Divide(long a, long b) {
+			return a / b;
+		}
+
+		public override long Multiply(long a, long b) {
+			return a * b;
+		}
+
+		public override long Add(long a, long b) {
+			return a + b;
+		}
+
+		public override long Negate(long a) {
+			return -a;
+		}
+	}
+
+	abstract class MathProvider<T> {
+		public abstract T Divide(T a, T b);
+		public abstract T Multiply(T a, T b);
+		public abstract T Add(T a, T b);
+		public abstract T Negate(T a);
+		public virtual T Subtract(T a, T b) {
+			return Add(a, Negate(b));
 		}
 	}
 }

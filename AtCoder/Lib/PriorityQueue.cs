@@ -6,12 +6,9 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AtCoder.Lib
-{
-	class DoDijkstraClass
-	{
-		long[] DoDijkstra(List<(int To, int Cost)>[] edg, int start)
-		{
+namespace AtCoder.Lib {
+	class DoDijkstraClass {
+		long[] DoDijkstra(List<(int To, int Cost)>[] edg, int start) {
 			var minCosts = Enumerable.Repeat(long.MaxValue, edg.Length).ToArray();
 
 			minCosts[start] = 0;
@@ -19,15 +16,12 @@ namespace AtCoder.Lib
 			var pQueue = new PriorityQueue<(int To, long Cost), long>(x => x.Cost, true);
 			pQueue.Enqueue((start, 0L));
 
-			while (pQueue.Count > 0)
-			{
+			while (pQueue.Count > 0) {
 				var (now, cost) = pQueue.Deque();
 
-				foreach (var (next, nextCost) in edg[now])
-				{
+				foreach (var (next, nextCost) in edg[now]) {
 					var newCost = cost + nextCost;
-					if (minCosts[next] > newCost)
-					{
+					if (minCosts[next] > newCost) {
 						pQueue.Enqueue((next, newCost));
 						minCosts[next] = newCost;
 					}
@@ -38,16 +32,14 @@ namespace AtCoder.Lib
 		}
 	}
 
-	class PriorityQueue<TObject, TPriority> where TPriority : IComparable<TPriority>
-	{
+	class PriorityQueue<TObject, TPriority> where TPriority : IComparable<TPriority> {
 		private readonly Func<TObject, TPriority> selector_;
 		private readonly int reverseFactor;
 		private TObject[] heap_;
 		int size;
 
 		public TObject Top => heap_[0];
-		public int Count
-		{
+		public int Count {
 			get { return size; }
 		}
 
@@ -59,15 +51,13 @@ namespace AtCoder.Lib
 		public PriorityQueue(
 			int capacity,
 			Func<TObject, TPriority> selector,
-			bool isReverse = false)
-		{
+			bool isReverse = false) {
 			heap_ = new TObject[capacity];
 			selector_ = selector;
 			reverseFactor = isReverse ? -1 : 1;
 		}
 
-		public void Enqueue(TObject x)
-		{
+		public void Enqueue(TObject x) {
 			if (heap_.Length == size) {
 				Extend(size * 2);
 			}
@@ -88,8 +78,7 @@ namespace AtCoder.Lib
 			heap_[i] = x;
 		}
 
-		public TObject Deque()
-		{
+		public TObject Deque() {
 			TObject ret = heap_[0];
 
 			TObject x = heap_[--size];
@@ -116,8 +105,7 @@ namespace AtCoder.Lib
 			return ret;
 		}
 
-		void Extend(int newSize)
-		{
+		void Extend(int newSize) {
 			var newHeap = new TObject[newSize];
 
 			heap_.CopyTo(newHeap, 0);
@@ -125,36 +113,30 @@ namespace AtCoder.Lib
 		}
 	}
 
-	class PriorityQueue<T> where T : IComparable<T>
-	{
+	class PriorityQueue<T> where T : IComparable<T> {
 		T[] heap_;
 		int size;
 		int reverseFactor;
 
-		public T Top
-		{
+		public T Top {
 			get { return heap_[0]; }
 		}
 
-		public int Count
-		{
+		public int Count {
 			get { return size; }
 		}
 
 		public PriorityQueue(bool isReverse = false)
-			: this(1024, isReverse)
-		{
+			: this(1024, isReverse) {
 		}
 
-		public PriorityQueue(int capacity, bool isReverse = false)
-		{
+		public PriorityQueue(int capacity, bool isReverse = false) {
 			heap_ = new T[capacity];
 			size = 0;
 			reverseFactor = isReverse ? -1 : 1;
 		}
 
-		public void Enqueue(T x)
-		{
+		public void Enqueue(T x) {
 			if (heap_.Length == size) {
 				Extend(size * 2);
 			}
@@ -175,8 +157,7 @@ namespace AtCoder.Lib
 			heap_[i] = x;
 		}
 
-		public T Deque()
-		{
+		public T Deque() {
 			T ret = heap_[0];
 
 			T x = heap_[--size];
@@ -203,8 +184,7 @@ namespace AtCoder.Lib
 			return ret;
 		}
 
-		void Extend(int newSize)
-		{
+		void Extend(int newSize) {
 			var newHeap = new T[newSize];
 
 			heap_.CopyTo(newHeap, 0);
