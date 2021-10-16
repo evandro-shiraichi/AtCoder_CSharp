@@ -18,7 +18,7 @@ namespace AtCoder.ABC {
 		}
 	}
 
-	class PrefixSumArray<T> {
+	class PrefixSumArray<T> where T : IComparable {
 		MathProvider<T> math_;
 
 		int length_;
@@ -53,6 +53,8 @@ namespace AtCoder.ABC {
 				math_ = new LongMathProvider() as MathProvider<T>;
 			else if (typeof(T) == typeof(double))
 				math_ = new DoubleMathProvider() as MathProvider<T>;
+			else
+				throw new ApplicationException();
 
 			length_ = length;
 			array_ = array;
@@ -64,7 +66,7 @@ namespace AtCoder.ABC {
 		}
 	}
 
-	class PrefixSumMatrix<T> {
+	class PrefixSumMatrix<T> where T : IComparable {
 		MathProvider<T> math_;
 
 		int h_;
@@ -96,6 +98,8 @@ namespace AtCoder.ABC {
 				math_ = new LongMathProvider() as MathProvider<T>;
 			else if (typeof(T) == typeof(double))
 				math_ = new DoubleMathProvider() as MathProvider<T>;
+			else
+				throw new ApplicationException();
 
 			h_ = h;
 			w_ = w;
@@ -110,6 +114,96 @@ namespace AtCoder.ABC {
 			for (int i = 1; i < h_; i++)
 				for (int j = 0; j < w_; j++)
 					array_[i, j] = math_.Add(array_[i, j], array_[i - 1, j]);
+		}
+	}
+
+	class Flow<T> where T : IComparable {
+		MathProvider<T> math_;
+
+		public Flow(int node_size) {
+			if (typeof(T) == typeof(int))
+				math_ = new IntMathProvider() as MathProvider<T>;
+			else if (typeof(T) == typeof(long))
+				math_ = new LongMathProvider() as MathProvider<T>;
+			else if (typeof(T) == typeof(double))
+				math_ = new DoubleMathProvider() as MathProvider<T>;
+			else
+				throw new ApplicationException();
+
+			V = node_size;
+			G = Enumerable.Repeat(0, V).Select(_ => new List<Edge>()).ToList();
+			level = Enumerable.Repeat(0, V).ToList();
+			iter = Enumerable.Repeat(0, V).ToList();
+		}
+
+		private class Edge {
+			public Edge(int to, T cap, int rev) {
+				To = to;
+				Cap = cap;
+				Rev = rev;
+			}
+			public int To { get; set; }
+			public T Cap { get; set; }
+			public int Rev { get; set; }
+		}
+
+		private readonly List<List<Edge>> G;
+		private readonly int V;
+		private List<int> level;
+		private List<int> iter;
+
+		public void AddEdge(int from, int to, T cap) {
+			G[from].Add(new Edge(to, cap, G[to].Count));
+			G[to].Add(new Edge(from, math_.Zero(), G[from].Count - 1));
+		}
+
+		public T MaxFlow(int s, int t) {
+			T flow = math_.Zero();
+			while (true) {
+				BFS(s);
+				if (level[t] < 0) { return flow; }
+				iter = Enumerable.Repeat(0, V).ToList();
+				var f = DFS(s, t, math_.MaxValue());
+				while (f.CompareTo(math_.Zero()) > 0) {
+					flow = math_.Add(flow, f);
+					f = DFS(s, t, math_.MaxValue());
+				}
+			}
+		}
+
+		private void BFS(int s) {
+			level = Enumerable.Repeat(-1, V).ToList();
+			level[s] = 0;
+			var que = new Queue<int>();
+			que.Enqueue(s);
+			while (que.Count != 0) {
+				var v = que.Dequeue();
+				for (int i = 0; i < G[v].Count; i++) {
+					var e = G[v][i];
+					if (e.Cap.CompareTo(math_.Zero()) > 0 && level[e.To] < 0) {
+						level[e.To] = level[v] + 1;
+						que.Enqueue(e.To);
+					}
+				}
+			}
+		}
+
+		private T DFS(int v, int t, T f) {
+			if (v == t)
+				return f;
+			for (int i = iter[v]; i < G[v].Count; i++) {
+				iter[v] = i;
+				var e = G[v][i];
+				if (e.Cap.CompareTo(math_.Zero()) > 0 && level[v] < level[e.To]) {
+					var d = DFS(e.To, t, math_.Min(f, e.Cap));
+					if (d.CompareTo(math_.Zero()) > 0) {
+						e.Cap = math_.Subtract(e.Cap, d);
+						G[e.To][e.Rev].Cap = math_.Add(G[e.To][e.Rev].Cap, d);
+						return d;
+					}
+				}
+			}
+			return math_.Zero();
 		}
 	}
 
@@ -582,6 +676,18 @@ namespace AtCoder.ABC {
 		public override double Negate(double a) {
 			return -a;
 		}
+
+		public override double Zero() {
+			return 0.0;
+		}
+
+		public override double MaxValue() {
+			return double.MaxValue;
+		}
+
+		public override double MinValue() {
+			return double.MinValue;
+		}
 	}
 
 	class IntMathProvider : MathProvider<int> {
@@ -599,6 +705,18 @@ namespace AtCoder.ABC {
 
 		public override int Negate(int a) {
 			return -a;
+		}
+
+		public override int Zero() {
+			return 0;
+		}
+
+		public override int MaxValue() {
+			return int.MaxValue;
+		}
+
+		public override int MinValue() {
+			return int.MinValue;
 		}
 	}
 
@@ -618,9 +736,21 @@ namespace AtCoder.ABC {
 		public override long Negate(long a) {
 			return -a;
 		}
+
+		public override long Zero() {
+			return 0;
+		}
+
+		public override long MaxValue() {
+			return long.MaxValue;
+		}
+
+		public override long MinValue() {
+			return long.MinValue;
+		}
 	}
 
-	abstract class MathProvider<T> {
+	abstract class MathProvider<T> where T : IComparable { 
 		public abstract T Divide(T a, T b);
 		public abstract T Multiply(T a, T b);
 		public abstract T Add(T a, T b);
@@ -628,5 +758,14 @@ namespace AtCoder.ABC {
 		public virtual T Subtract(T a, T b) {
 			return Add(a, Negate(b));
 		}
+		public virtual T Min(T a, T b) {
+			return a.CompareTo(b) > 0 ? b : a;
+		}
+		public virtual T Max(T a, T b) {
+			return a.CompareTo(b) > 0 ? a : b;
+		}
+		public abstract T Zero();
+		public abstract T MaxValue();
+		public abstract T MinValue();
 	}
 }
