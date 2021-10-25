@@ -18,7 +18,8 @@ namespace AtCoder.ABC {
 		}
 	}
 
-	class PrefixSumArray<T> where T : IComparable {
+	class PrefixSumArray<T> : IEnumerable<T>
+		where T : IComparable {
 		MathProvider<T> math_;
 
 		int length_;
@@ -64,7 +65,15 @@ namespace AtCoder.ABC {
 			for (int i = 1; i < length_; i++)
 				array_[i] = math_.Add(array_[i], array_[i - 1]);
 		}
-	}
+
+        public IEnumerator<T> GetEnumerator() {
+            return ((IEnumerable<T>)array_).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return array_.GetEnumerator();
+        }
+    }
 
 	class PrefixSumMatrix<T> where T : IComparable {
 		MathProvider<T> math_;
@@ -114,6 +123,128 @@ namespace AtCoder.ABC {
 			for (int i = 1; i < h_; i++)
 				for (int j = 0; j < w_; j++)
 					array_[i, j] = math_.Add(array_[i, j], array_[i - 1, j]);
+		}
+	}
+
+	class PriorityQueue<TObject, TPriority> where TPriority : IComparable<TPriority> {
+		private readonly Func<TObject, TPriority> selector_;
+		private readonly int reverseFactor;
+		private TObject[] heap_;
+		int size;
+
+		public TObject Top => heap_[0];
+		public int Count {
+			get { return size; }
+		}
+
+		public PriorityQueue(
+			Func<TObject, TPriority> selector,
+			bool isReverse = false)
+			: this(1024, selector, isReverse) { }
+
+		public PriorityQueue(
+			int capacity,
+			Func<TObject, TPriority> selector,
+			bool isReverse = false) {
+			heap_ = new TObject[capacity];
+			selector_ = selector;
+			reverseFactor = isReverse ? -1 : 1;
+		}
+
+		public void Enqueue(TObject x) {
+			if (heap_.Length == size) {
+				Extend(size * 2);
+			}
+
+			int i = size++;
+
+			while (i > 0) {
+				int p = (i - 1) / 2;
+
+				if (reverseFactor * selector_(heap_[p]).CompareTo(selector_(x)) >= 0) {
+					break;
+				}
+
+				heap_[i] = heap_[p];
+				i = p;
+			}
+
+			heap_[i] = x;
+		}
+
+		public TObject Dequeue() {
+			TObject ret = heap_[0];
+
+			TObject x = heap_[--size];
+
+			int i = 0;
+			while (i * 2 + 1 < size) {
+				int a = i * 2 + 1;
+				int b = i * 2 + 2;
+
+				if (b < size && reverseFactor * selector_(heap_[b]).CompareTo(selector_(heap_[a])) > 0) {
+					a = b;
+				}
+
+				if (reverseFactor * selector_(heap_[a]).CompareTo(selector_(x)) <= 0) {
+					break;
+				}
+
+				heap_[i] = heap_[a];
+				i = a;
+			}
+
+			heap_[i] = x;
+
+			return ret;
+		}
+
+		void Extend(int newSize) {
+			var newHeap = new TObject[newSize];
+
+			heap_.CopyTo(newHeap, 0);
+			heap_ = newHeap;
+		}
+	}
+
+	class Dubling<TransitionType, ValueType> {
+		private readonly TransitionType[] transitions_;
+		private readonly ValueType initialValue_;
+		private readonly long max_;
+		private readonly Func<ValueType, TransitionType, ValueType> valueConverter_;
+
+		public Dubling(
+			long max,
+			TransitionType initialTransition,
+			ValueType initialValue,
+			Func<TransitionType, TransitionType> transitionFunc,
+			Func<ValueType, TransitionType, ValueType> valueConverter) {
+			initialValue_ = initialValue;
+			max_ = max;
+			valueConverter_ = valueConverter;
+			var powerIndex = max.Get2PowerIndexRoundingOff() + 1;
+			transitions_ = new TransitionType[powerIndex];
+			transitions_[0] = initialTransition;
+
+			for (int i = 1; i < powerIndex; i++) {
+				transitions_[i] = transitionFunc(transitions_[i - 1]);
+			}
+		}
+
+		public ValueType Query(long i) {
+			return QueryCore(initialValue_, i);
+		}
+
+		public ValueType QueryCore(ValueType now, long i) {
+			if (i > max_ || i < 0)
+				throw new Exception();
+
+			if (i == 0)
+				return now;
+
+			var powerIndex = i.Get2PowerIndexRoundingOff();
+			now = valueConverter_(now, transitions_[powerIndex]);
+			return QueryCore(now, i - MathHelper.Pow(2, powerIndex));
 		}
 	}
 
@@ -227,6 +358,10 @@ namespace AtCoder.ABC {
 		public static void UpdateMin(this ref double max, double val) {
 			max = Math.Min(max, val);
 		}
+
+		public static void Swap<T>(ref T a, ref T b) {
+			(a, b) = (b, a);
+        }
 	}
 
 	public static class ArrayHelper {
@@ -324,7 +459,7 @@ namespace AtCoder.ABC {
 			return map;
 		}
 
-		public static int[,] CreateMapFilled<T>(int h, int w, int initialValue) {
+		public static int[,] CreateMapFilled(int h, int w, int initialValue) {
 			var map = new int[h, w];
 
 			for (int i = 0; i < h; i++)
@@ -334,7 +469,7 @@ namespace AtCoder.ABC {
 			return map;
 		}
 
-		public static long[,] CreateMapFilled<T>(int h, int w, long initialValue) {
+		public static long[,] CreateMapFilled(int h, int w, long initialValue) {
 			var map = new long[h, w];
 
 			for (int i = 0; i < h; i++)
@@ -344,7 +479,7 @@ namespace AtCoder.ABC {
 			return map;
 		}
 
-		public static double[,] CreateMapFilled<T>(int h, int w, double initialValue) {
+		public static double[,] CreateMapFilled(int h, int w, double initialValue) {
 			var map = new double[h, w];
 
 			for (int i = 0; i < h; i++)
@@ -432,6 +567,55 @@ namespace AtCoder.ABC {
 	public static class MathHelper {
 		public static int GetDist2(int x1, int y1, int x2, int y2) {
 			return ((x1 - x2) * (x1 - x2)) + ((y1 - y2) * (y1 - y2));
+		}
+
+		public static long Pow(long a, long b, long mod = 0L) {
+			var temp = a;
+			var ans = 1L;
+
+			for (int i = 1; i <= b; i <<= 1) {
+				if ((b & i) != 0) {
+					ans *= temp;
+					if (mod != 0) {
+						ans %= mod;
+					}
+				}
+
+				temp *= temp;
+				if (mod != 0) {
+					temp %= mod;
+				}
+			}
+
+			return ans;
+		}
+
+		public static int Get2PowerIndexRoundingOff(this long n) {
+			var powerIndex = 0;
+
+			while (1 << powerIndex < n) {
+				powerIndex++;
+			}
+
+			if (1 << powerIndex > n) {
+				powerIndex--;
+			}
+
+			return powerIndex;
+		}
+
+		public static int Get2PowerIndexRoundingOff(this int n) {
+			var powerIndex = 0;
+
+			while (1 << powerIndex < n) {
+				powerIndex++;
+			}
+
+			if (1 << powerIndex > n) {
+				powerIndex--;
+			}
+
+			return powerIndex;
 		}
 	}
 

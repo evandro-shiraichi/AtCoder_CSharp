@@ -17,7 +17,7 @@ namespace AtCoder.Lib {
 			pQueue.Enqueue((start, 0L));
 
 			while (pQueue.Count > 0) {
-				var (now, cost) = pQueue.Deque();
+				var (now, cost) = pQueue.Dequeue();
 
 				foreach (var (next, nextCost) in edg[now]) {
 					var newCost = cost + nextCost;
@@ -78,7 +78,7 @@ namespace AtCoder.Lib {
 			heap_[i] = x;
 		}
 
-		public TObject Deque() {
+		public TObject Dequeue() {
 			TObject ret = heap_[0];
 
 			TObject x = heap_[--size];
