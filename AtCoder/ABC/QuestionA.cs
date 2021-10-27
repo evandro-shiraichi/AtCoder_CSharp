@@ -18,6 +18,83 @@ namespace AtCoder.ABC {
 		}
 	}
 
+	class CompressArray<T> : IEnumerable<(long, T)> {
+		private readonly SortedSet<long> sortedSet_ = new SortedSet<long>();
+		private readonly T default_;
+		private Dictionary<int, long> decompressIndexDict_;
+		private Dictionary<long, int> compressIndexDict_;
+
+		private T[] array_;
+
+		public int Length {
+			get { return array_.Length; }
+		}
+
+		public T this[int i] {
+			get { return array_[i]; }
+			set { array_[i] = value; }
+		}
+
+		public CompressArray(IList<long> indexes, T defaultValue = default) {
+			default_ = defaultValue;
+			foreach(var index in indexes) {
+				sortedSet_.Add(index);
+			}
+
+			Update();
+		}
+
+		public CompressArray(T defaultValue = default) {
+			default_ = defaultValue;
+		}
+
+		public void AddIndex(long i) {
+			sortedSet_.Add(i);
+		}
+
+		public void Update() {
+			array_ = Enumerable.Repeat(default_, sortedSet_.Count).ToArray();
+			compressIndexDict_ = new Dictionary<long, int>();
+			decompressIndexDict_ = new Dictionary<int, long>();
+
+			var i = 0;
+			foreach (var set in sortedSet_) {
+				compressIndexDict_.Add(set, i);
+				decompressIndexDict_.Add(i, set);
+				i++;
+			}
+		}
+
+		public int CompressIndex(long index) {
+			return compressIndexDict_[index];
+		}
+
+		public long DecompressIndex(int index) {
+			return decompressIndexDict_[index];
+		}
+
+		public IList<T> Decompress(long max = -1) {
+			if(max < 0) {
+				max = sortedSet_.Last();
+			}
+			var decompress = Enumerable.Repeat(default_, (int)max).ToArray();
+
+			foreach(var (i, t) in this) {
+				decompress[i] = t;
+			}
+
+			return decompress;
+		}
+
+		public IEnumerator<(long, T)> GetEnumerator() {
+			return Enumerable.Range(0, Length).Select(x => (decompressIndexDict_[x], array_[x])).GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator() {
+			return this.GetEnumerator();
+		}
+	}
+
 	class PrefixSumArray<T> : IEnumerable<T>
 		where T : IComparable {
 		MathProvider<T> math_;
@@ -66,14 +143,14 @@ namespace AtCoder.ABC {
 				array_[i] = math_.Add(array_[i], array_[i - 1]);
 		}
 
-        public IEnumerator<T> GetEnumerator() {
-            return ((IEnumerable<T>)array_).GetEnumerator();
-        }
+		public IEnumerator<T> GetEnumerator() {
+			return ((IEnumerable<T>)array_).GetEnumerator();
+		}
 
-        IEnumerator IEnumerable.GetEnumerator() {
-            return array_.GetEnumerator();
-        }
-    }
+		IEnumerator IEnumerable.GetEnumerator() {
+			return array_.GetEnumerator();
+		}
+	}
 
 	class PrefixSumMatrix<T> where T : IComparable {
 		MathProvider<T> math_;
@@ -207,6 +284,92 @@ namespace AtCoder.ABC {
 		}
 	}
 
+	class Dequeue<T> {
+		private int _capacity;
+		private T[] _array;
+
+		private int _firstIndex = 0;
+		private int _lastIndex = 1;
+
+		public Dequeue(int capacity = 16) {
+			_capacity = capacity;
+			_array = new T[_capacity];
+		}
+
+		public T this[int i] {
+			get {
+				if (i < 0 || i >= Count)
+					throw new ArgumentOutOfRangeException();
+				return _array[ToIndex(_firstIndex + 1 + i)];
+			}
+			set {
+				if (i < 0 || i >= Count)
+					throw new ArgumentOutOfRangeException();
+				_array[ToIndex(_firstIndex + 1 + i)] = value;
+			}
+		}
+
+		public int Count {
+			get { return _lastIndex - _firstIndex - 1; }
+		}
+
+		public bool Any() {
+			return Count > 0;
+		}
+
+		private int ToIndex(int index) {
+			index %= _capacity;
+			if (index < 0)
+				index += _capacity;
+			return index;
+		}
+
+		public void PushBack(T data) {
+			if (_capacity == Count)
+				Resize();
+
+			_array[ToIndex(_lastIndex++)] = data;
+		}
+
+		public void PushFront(T data) {
+			if (_capacity == Count)
+				Resize();
+
+			_array[ToIndex(_firstIndex--)] = data;
+		}
+
+		public T PopBack() {
+			if (Any() == false)
+				throw new InvalidOperationException();
+
+			var ret = _array[ToIndex(_lastIndex - 1)];
+			_lastIndex--;
+			return ret;
+		}
+
+		public T PopFront() {
+			if (Any() == false)
+				throw new InvalidOperationException();
+
+			var ret = _array[ToIndex(_firstIndex + 1)];
+			_firstIndex++;
+			return ret;
+		}
+
+		private void Resize() {
+			var newArray = new T[_capacity * 2];
+
+			for (int i = _firstIndex; i < _lastIndex - 1; i++) {
+				var index = i - _firstIndex;
+				newArray[index] = _array[ToIndex(i + 1)];
+			}
+			_firstIndex = -1;
+			_lastIndex = _capacity;
+			_capacity *= 2;
+			_array = newArray;
+		}
+	}
+
 	class Dubling<TransitionType, ValueType> {
 		private readonly TransitionType[] transitions_;
 		private readonly ValueType initialValue_;
@@ -335,6 +498,53 @@ namespace AtCoder.ABC {
 				}
 			}
 			return math_.Zero();
+		}
+	}
+
+	public static class DPHelper {
+		public static int DoKnapSackDP((int weight, int worth)[] ww, int maxWeight) {
+			var dp = new int[maxWeight + 1];
+
+			for (int i = 0; i < ww.Length; i++) {
+				var (Width, Worth) = ww[i];
+				var newDp = new int[maxWeight + 1];
+
+				for (int j = 0; j <= maxWeight; j++) {
+					var temp1 = j - 1 >= 0 ? newDp[j - 1] : 0;
+					var temp2 = j - Width >= 0 ? dp[j - Width] + Worth : 0;
+					newDp[j] = MathHelper.Max(temp1, dp[j], temp2);
+				}
+
+				dp = newDp;
+			}
+
+			return dp[maxWeight];
+		}
+
+		public static int DoLimitKnapSackDP((int weight, int worth)[] ww, int maxWeight, int limitNum) {
+			var dp = new int[limitNum + 1, maxWeight + 1];
+			var ans = 0;
+
+			for (int k = 0; k < ww.Length; k++) {
+				var newDP = new int[limitNum + 1, maxWeight + 1];
+				var (weight, worth) = ww[k];
+				var max = 0;
+
+				var maxJ = Math.Min(limitNum + 1, k + 1);
+
+				for (int j = 1; j < limitNum + 1; j++) {
+					for (int i = 1; i < maxWeight + 1; i++) {
+						var temp = i - weight >= 0 ? dp[j - 1, i - weight] + worth : 0;
+						max = MathHelper.Max(dp[j - 1, i], dp[j, i - 1], dp[j, i], temp);
+						newDP[j, i] = max;
+					}
+				}
+
+				ans.UpdateMax(max);
+				dp = newDP;
+			}
+
+			return ans;
 		}
 	}
 
@@ -568,6 +778,19 @@ namespace AtCoder.ABC {
 		public static int GetDist2(int x1, int y1, int x2, int y2) {
 			return ((x1 - x2) * (x1 - x2)) + ((y1 - y2) * (y1 - y2));
 		}
+		public static bool LineSegmentIntersectionJudge(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4) {
+			long s, t;
+			s = (x1 - x2) * (y3 - y1) - (y1 - y2) * (x3 - x1);
+			t = (x1 - x2) * (y4 - y1) - (y1 - y2) * (x4 - x1);
+
+			if (s * t > 0)
+				return false;
+
+			s = (x3 - x4) * (y1 - y3) - (y3 - y4) * (x1 - x3);
+			t = (x3 - x4) * (y2 - y3) - (y3 - y4) * (x2 - x3);
+
+			return s * t <= 0;
+		}
 
 		public static long Pow(long a, long b, long mod = 0L) {
 			var temp = a;
@@ -616,6 +839,38 @@ namespace AtCoder.ABC {
 			}
 
 			return powerIndex;
+		}
+
+		public static int Max(int a, int b, int c) {
+			return Math.Max(a, Math.Max(b, c));
+		}
+
+		public static int Max(int a, int b, int c, int d) {
+			return Math.Max(d, Math.Max(a, Math.Max(b, c)));
+		}
+
+		public static long Max(long a, long b, long c) {
+			return Math.Max(a, Math.Max(b, c));
+		}
+
+		public static long Max(long a, long b, long c, long d) {
+			return Math.Max(d, Math.Max(a, Math.Max(b, c)));
+		}
+
+		public static int Min(int a, int b, int c) {
+			return Math.Min(a, Math.Min(b, c));
+		}
+
+		public static int Min(int a, int b, int c, int d) {
+			return Math.Min(d, Math.Min(a, Math.Min(b, c)));
+		}
+
+		public static long Min(long a, long b, long c) {
+			return Math.Min(a, Math.Min(b, c));
+		}
+
+		public static long Min(long a, long b, long c, long d) {
+			return Math.Min(d, Math.Min(a, Math.Min(b, c)));
 		}
 	}
 
