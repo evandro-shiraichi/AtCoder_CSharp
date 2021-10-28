@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -15,7 +16,15 @@ namespace AtCoder.ABC {
 	class QuestionA {
 		public static void Main(string[] args) {
 			var scanner = new Scanner();
+
+			var s = scanner.Int();
+			Console.WriteLine(string.Join('\n', new PermutaionInt(s).GetAllPermutation().Select(x => string.Join(' ', x))));
 		}
+	}
+
+	static class Constants {
+		public static readonly int ModValue = 1000000007;
+		public static readonly int ModInvMax = 510000;
 	}
 
 	class CompressArray<T> : IEnumerable<(long, T)> {
@@ -97,7 +106,7 @@ namespace AtCoder.ABC {
 
 	class PrefixSumArray<T> : IEnumerable<T>
 		where T : IComparable {
-		MathProvider<T> math_;
+		readonly IMathArithmeticOperator<T> math_;
 
 		int length_;
 		public int Count {
@@ -125,14 +134,7 @@ namespace AtCoder.ABC {
 		public PrefixSumArray(int length) : this(length, new T[length]) { }
 
 		public PrefixSumArray(int length, T[] array) {
-			if (typeof(T) == typeof(int))
-				math_ = new IntMathProvider() as MathProvider<T>;
-			else if (typeof(T) == typeof(long))
-				math_ = new LongMathProvider() as MathProvider<T>;
-			else if (typeof(T) == typeof(double))
-				math_ = new DoubleMathProvider() as MathProvider<T>;
-			else
-				throw new ApplicationException();
+			math_ = IMathArithmeticOperator<T>.GetOperator();
 
 			length_ = length;
 			array_ = array;
@@ -153,7 +155,7 @@ namespace AtCoder.ABC {
 	}
 
 	class PrefixSumMatrix<T> where T : IComparable {
-		MathProvider<T> math_;
+		readonly IMathArithmeticOperator<T> math_;
 
 		int h_;
 		int w_;
@@ -178,14 +180,7 @@ namespace AtCoder.ABC {
 		public PrefixSumMatrix(int h, int w) : this(h, w, new T[h, w]) { }
 
 		public PrefixSumMatrix(int h, int w, T[,] map) {
-			if (typeof(T) == typeof(int))
-				math_ = new IntMathProvider() as MathProvider<T>;
-			else if (typeof(T) == typeof(long))
-				math_ = new LongMathProvider() as MathProvider<T>;
-			else if (typeof(T) == typeof(double))
-				math_ = new DoubleMathProvider() as MathProvider<T>;
-			else
-				throw new ApplicationException();
+			math_ = IMathArithmeticOperator<T>.GetOperator();
 
 			h_ = h;
 			w_ = w;
@@ -370,6 +365,86 @@ namespace AtCoder.ABC {
 		}
 	}
 
+	class PermutaionInt {
+		List<IList<int>> permuations_;
+		readonly int max_;
+
+		public PermutaionInt(int max) {
+			max_ = max;
+		}
+
+		public IEnumerable<IList<int>> GetAllPermutation() {
+			if (permuations_ is null) {
+				permuations_ = new List<IList<int>>();
+				DFS(new Stack<int>(), new HashSet<int>());
+			}
+
+			return permuations_;
+		}
+
+		void DFS(Stack<int> nowPerm, HashSet<int> yet) {
+			if (nowPerm.Count == max_) {
+				permuations_.Add(nowPerm.Reverse().ToArray());
+				return;
+			}
+
+			for (int i = 0; i < max_; i++) {
+				if (yet.Contains(i))
+					continue;
+
+				yet.Add(i);
+				nowPerm.Push(i);
+				DFS(nowPerm, yet);
+				nowPerm.Pop();
+				yet.Remove(i);
+			}
+		}
+	}
+
+	class PermutationString {
+		List<string> permutations_;
+		string str_;
+
+		HashSet<string> yetString_ = new HashSet<string>();
+		HashSet<int> yetIndex_ = new HashSet<int>();
+
+		public PermutationString(string str) {
+			var temp = str.ToArray();
+			Array.Sort(temp);
+			str_ = new string(temp);
+		}
+
+		public IEnumerable<string> GetAllPermutation() {
+			if (permutations_ is null) {
+				permutations_ = new List<string>();
+				DFS("");
+			}
+
+			return permutations_;
+		}
+
+		void DFS(string nowS) {
+			if (yetString_.Contains(nowS))
+				return;
+
+			yetString_.Add(nowS);
+
+			if (nowS.Length == str_.Length) {
+				permutations_.Add(nowS);
+				return;
+			}
+
+			for (int i = 0; i < str_.Length; i++) {
+				if (yetIndex_.Contains(i))
+					continue;
+
+				yetIndex_.Add(i);
+				DFS(nowS + str_[i]);
+				yetIndex_.Remove(i);
+			}
+		}
+	}
+
 	class Dubling<TransitionType, ValueType> {
 		private readonly TransitionType[] transitions_;
 		private readonly ValueType initialValue_;
@@ -385,7 +460,7 @@ namespace AtCoder.ABC {
 			initialValue_ = initialValue;
 			max_ = max;
 			valueConverter_ = valueConverter;
-			var powerIndex = max.Get2PowerIndexRoundingOff() + 1;
+			var powerIndex = MathHelper.Get2PowerIndexRoundingOff(max) + 1;
 			transitions_ = new TransitionType[powerIndex];
 			transitions_[0] = initialTransition;
 
@@ -405,24 +480,17 @@ namespace AtCoder.ABC {
 			if (i == 0)
 				return now;
 
-			var powerIndex = i.Get2PowerIndexRoundingOff();
+			var powerIndex = MathHelper.Get2PowerIndexRoundingOff(i);
 			now = valueConverter_(now, transitions_[powerIndex]);
 			return QueryCore(now, i - MathHelper.Pow(2, powerIndex));
 		}
 	}
 
 	class Flow<T> where T : IComparable {
-		MathProvider<T> math_;
+		IMathArithmeticOperator<T> math_;
 
 		public Flow(int node_size) {
-			if (typeof(T) == typeof(int))
-				math_ = new IntMathProvider() as MathProvider<T>;
-			else if (typeof(T) == typeof(long))
-				math_ = new LongMathProvider() as MathProvider<T>;
-			else if (typeof(T) == typeof(double))
-				math_ = new DoubleMathProvider() as MathProvider<T>;
-			else
-				throw new ApplicationException();
+			math_ = IMathArithmeticOperator<T>.GetOperator();
 
 			V = node_size;
 			G = Enumerable.Repeat(0, V).Select(_ => new List<Edge>()).ToList();
@@ -448,19 +516,19 @@ namespace AtCoder.ABC {
 
 		public void AddEdge(int from, int to, T cap) {
 			G[from].Add(new Edge(to, cap, G[to].Count));
-			G[to].Add(new Edge(from, math_.Zero(), G[from].Count - 1));
+			G[to].Add(new Edge(from, math_.Zero, G[from].Count - 1));
 		}
 
 		public T MaxFlow(int s, int t) {
-			T flow = math_.Zero();
+			T flow = math_.Zero;
 			while (true) {
 				BFS(s);
 				if (level[t] < 0) { return flow; }
 				iter = Enumerable.Repeat(0, V).ToList();
-				var f = DFS(s, t, math_.MaxValue());
-				while (f.CompareTo(math_.Zero()) > 0) {
+				var f = DFS(s, t, math_.MaxValue);
+				while (f.CompareTo(math_.Zero) > 0) {
 					flow = math_.Add(flow, f);
-					f = DFS(s, t, math_.MaxValue());
+					f = DFS(s, t, math_.MaxValue);
 				}
 			}
 		}
@@ -474,7 +542,7 @@ namespace AtCoder.ABC {
 				var v = que.Dequeue();
 				for (int i = 0; i < G[v].Count; i++) {
 					var e = G[v][i];
-					if (e.Cap.CompareTo(math_.Zero()) > 0 && level[e.To] < 0) {
+					if (e.Cap.CompareTo(math_.Zero) > 0 && level[e.To] < 0) {
 						level[e.To] = level[v] + 1;
 						que.Enqueue(e.To);
 					}
@@ -488,30 +556,32 @@ namespace AtCoder.ABC {
 			for (int i = iter[v]; i < G[v].Count; i++) {
 				iter[v] = i;
 				var e = G[v][i];
-				if (e.Cap.CompareTo(math_.Zero()) > 0 && level[v] < level[e.To]) {
+				if (e.Cap.CompareTo(math_.Zero) > 0 && level[v] < level[e.To]) {
 					var d = DFS(e.To, t, math_.Min(f, e.Cap));
-					if (d.CompareTo(math_.Zero()) > 0) {
-						e.Cap = math_.Subtract(e.Cap, d);
+					if (d.CompareTo(math_.Zero) > 0) {
+						e.Cap = math_.Substract(e.Cap, d);
 						G[e.To][e.Rev].Cap = math_.Add(G[e.To][e.Rev].Cap, d);
 						return d;
 					}
 				}
 			}
-			return math_.Zero();
+			return math_.Zero;
 		}
 	}
 
-	public static class DPHelper {
-		public static int DoKnapSackDP((int weight, int worth)[] ww, int maxWeight) {
-			var dp = new int[maxWeight + 1];
+	static class DPHelper {
+		public static T DoKnapSackDP<T>((int weight, T worth)[] ww, int maxWeight) where T : struct, IComparable {
+			var op = IMathArithmeticOperator<T>.GetOperator();
+			
+			var dp = new T[maxWeight + 1];
 
 			for (int i = 0; i < ww.Length; i++) {
 				var (Width, Worth) = ww[i];
-				var newDp = new int[maxWeight + 1];
+				var newDp = new T[maxWeight + 1];
 
 				for (int j = 0; j <= maxWeight; j++) {
-					var temp1 = j - 1 >= 0 ? newDp[j - 1] : 0;
-					var temp2 = j - Width >= 0 ? dp[j - Width] + Worth : 0;
+					var temp1 = j - 1 >= 0 ? newDp[j - 1] : op.Zero;
+					var temp2 = j - Width >= 0 ? op.Add(dp[j - Width], Worth) : op.Zero;
 					newDp[j] = MathHelper.Max(temp1, dp[j], temp2);
 				}
 
@@ -521,20 +591,22 @@ namespace AtCoder.ABC {
 			return dp[maxWeight];
 		}
 
-		public static int DoLimitKnapSackDP((int weight, int worth)[] ww, int maxWeight, int limitNum) {
-			var dp = new int[limitNum + 1, maxWeight + 1];
-			var ans = 0;
+		public static T DoLimitKnapSackDP<T>((int weight, T worth)[] ww, int maxWeight, int limitNum) where T : struct, IComparable {
+			var op = IMathArithmeticOperator<T>.GetOperator();
+
+			var dp = new T[limitNum + 1, maxWeight + 1];
+			var ans = op.Zero;
 
 			for (int k = 0; k < ww.Length; k++) {
-				var newDP = new int[limitNum + 1, maxWeight + 1];
+				var newDP = new T[limitNum + 1, maxWeight + 1];
 				var (weight, worth) = ww[k];
-				var max = 0;
+				var max = op.Zero;
 
 				var maxJ = Math.Min(limitNum + 1, k + 1);
 
 				for (int j = 1; j < limitNum + 1; j++) {
 					for (int i = 1; i < maxWeight + 1; i++) {
-						var temp = i - weight >= 0 ? dp[j - 1, i - weight] + worth : 0;
+						var temp = i - weight >= 0 ? op.Add(dp[j - 1, i - weight], worth) : op.Zero;
 						max = MathHelper.Max(dp[j - 1, i], dp[j, i - 1], dp[j, i], temp);
 						newDP[j, i] = max;
 					}
@@ -549,24 +621,12 @@ namespace AtCoder.ABC {
 	}
 
 	static class HelperExtensions {
-		public static void UpdateMax(this ref int max, int val) {
-			max = Math.Max(max, val);
-		}
-		public static void UpdateMax(this ref long max, long val) {
-			max = Math.Max(max, val);
-		}
-		public static void UpdateMax(this ref double max, double val) {
-			max = Math.Max(max, val);
+		public static void UpdateMax<T>(this ref T max, T val) where T : struct, IComparable {
+			max = MathHelper.Max(max, val);
 		}
 
-		public static void UpdateMin(this ref int max, int val) {
-			max = Math.Min(max, val);
-		}
-		public static void UpdateMin(this ref long max, long val) {
-			max = Math.Min(max, val);
-		}
-		public static void UpdateMin(this ref double max, double val) {
-			max = Math.Min(max, val);
+		public static void UpdateMin<T>(this ref T max, T val) where T : struct, IComparable {
+			max = MathHelper.Min(max, val);
 		}
 
 		public static void Swap<T>(ref T a, ref T b) {
@@ -574,27 +634,13 @@ namespace AtCoder.ABC {
         }
 	}
 
-	public static class ArrayHelper {
+	static class ArrayHelper {
 		public static T[] CreateArray<T>(int w) {
 			var array = new T[w];
 			return array;
 		}
 
-		public static int[] Fill<T>(this int[] array, int intialValue) {
-			for (int i = 0; i < array.Length; i++)
-				array[i] = intialValue;
-
-			return array;
-		}
-
-		public static long[] Fill<T>(this long[] array, long intialValue) {
-			for (int i = 0; i < array.Length; i++)
-				array[i] = intialValue;
-
-			return array;
-		}
-
-		public static double[] Fill<T>(this double[] array, double intialValue) {
+		public static T[] Fill<T>(this T[] array, T intialValue) {
 			for (int i = 0; i < array.Length; i++)
 				array[i] = intialValue;
 
@@ -608,23 +654,15 @@ namespace AtCoder.ABC {
 			return array;
 		}
 
-		public static int[] CreateArrayFilled<T>(int w, int initialValue) {
-			return Fill<int>(CreateArray<int>(w), initialValue);
-		}
-
-		public static long[] CreateArrayFilled<T>(int w, long initialValue) {
-			return Fill<long>(CreateArray<long>(w), initialValue);
-		}
-
-		public static double[] CreateArrayFilled<T>(int w, double initialValue) {
-			return Fill<double>(CreateArray<double>(w), initialValue);
+		public static T[] CreateArrayFilled<T>(int w, T initialValue) {
+			return Fill(CreateArray<T>(w), initialValue);
 		}
 
 		public static T[] CreateArrayFilled<T>(int w, Func<T> initialValue) {
 			return Fill(CreateArray<T>(w), initialValue);
 		}
 
-		public static T[][] CreateMap<T>(int h, int w) {
+		public static T[][] CreateJagMap<T>(int h, int w) {
 			var map = new T[h][];
 
 			for (int i = 0; i < h; i++)
@@ -633,34 +671,7 @@ namespace AtCoder.ABC {
 			return map;
 		}
 
-		public static int[][] FillMap<T>(this int[][] map, int initialValue) {
-			var h = map.Length;
-
-			for (int i = 0; i < h; i++)
-				Fill<int>(map[i], initialValue);
-
-			return map;
-		}
-
-		public static long[][] FillMap<T>(this long[][] map, long initialValue) {
-			var h = map.Length;
-
-			for (int i = 0; i < h; i++)
-				Fill<long>(map[i], initialValue);
-
-			return map;
-		}
-
-		public static double[][] FillMap<T>(this double[][] map, double initialValue) {
-			var h = map.Length;
-
-			for (int i = 0; i < h; i++)
-				Fill<double>(map[i], initialValue);
-
-			return map;
-		}
-
-		public static T[][] FillMap<T>(this T[][] map, Func<T> initialValue) {
+		public static T[][] FillJagMap<T>(this T[][] map, T initialValue) {
 			var h = map.Length;
 
 			for (int i = 0; i < h; i++)
@@ -669,28 +680,17 @@ namespace AtCoder.ABC {
 			return map;
 		}
 
-		public static int[,] CreateMapFilled(int h, int w, int initialValue) {
-			var map = new int[h, w];
+		public static T[][] FillJagMap<T>(this T[][] map, Func<T> initialValue) {
+			var h = map.Length;
 
 			for (int i = 0; i < h; i++)
-				for (int j = 0; j < w; j++)
-					map[i, j] = initialValue;
+				Fill(map[i], initialValue);
 
 			return map;
 		}
 
-		public static long[,] CreateMapFilled(int h, int w, long initialValue) {
-			var map = new long[h, w];
-
-			for (int i = 0; i < h; i++)
-				for (int j = 0; j < w; j++)
-					map[i, j] = initialValue;
-
-			return map;
-		}
-
-		public static double[,] CreateMapFilled(int h, int w, double initialValue) {
-			var map = new double[h, w];
+		public static T[,] CreateMapFilled<T>(int h, int w, T initialValue) {
+			var map = new T[h, w];
 
 			for (int i = 0; i < h; i++)
 				for (int j = 0; j < w; j++)
@@ -709,17 +709,13 @@ namespace AtCoder.ABC {
 			return map;
 		}
 
-		public static void WriteArray<T>(IEnumerable<T> array, string sep) {
-			Console.WriteLine(string.Join(sep, array));
-		}
-
 		public static void WriteMap<T>(IEnumerable<IEnumerable<T>> map, string sep) {
 			foreach (var array in map)
 				WriteArray(array, sep);
 		}
 
-		public static void WriteArray<T, R>(IEnumerable<T> array, string sep, Func<T, R> converter) {
-			Console.WriteLine(string.Join(sep, array.Select(x => converter(x))));
+		public static void WriteArray<T>(IEnumerable<T> array, string sep) {
+			Console.WriteLine(string.Join(sep, array));
 		}
 
 		public static void WriteMap<T, R>(IEnumerable<IEnumerable<T>> map, string sep, Func<T, R> converter) {
@@ -727,7 +723,11 @@ namespace AtCoder.ABC {
 				WriteArray(array, sep, converter);
 		}
 
-		private static int LowerBoundCore<T>(IList<T> array, T lowerValue, Func<T, T, int> comaparer) {
+		public static void WriteArray<T, R>(IEnumerable<T> array, string sep, Func<T, R> converter) {
+			Console.WriteLine(string.Join(sep, array.Select(x => converter(x))));
+		}
+
+		private static int LowerBound<T>(this IList<T> array, T lowerValue, Func<T, T, int> comaparer) {
 			var (ng, ok) = (-1, array.Count);
 
 			while (Math.Abs(ok - ng) > 1) {
@@ -749,19 +749,14 @@ namespace AtCoder.ABC {
 
 		public static int LowerBound<T>(this IList<T> array, T lowerValue)
 			where T : IComparable {
-			return LowerBoundCore(array, lowerValue, (x, y) => x.CompareTo(y));
+			return array.LowerBound(lowerValue, (x, y) => x.CompareTo(y));
 		}
 
-		public static int LowerBound<T>(this IList<T> array, T lowerValue, Func<T, T, int> comparer) {
-			return LowerBoundCore(array, lowerValue, comparer);
-		}
-
-		public static List<T> LongestIncreasingSubsequense<T>(IList<T> array)
-			where T : IComparable {
+		public static List<T> LongestIncreasingSubsequense<T>(IList<T> array, Func<T, T, int> comaparer) {
 			var list = new List<T>();
 
 			foreach (var a in array) {
-				var index = list.LowerBound(a);
+				var index = list.LowerBound(a, comaparer);
 
 				if (index == -1) {
 					list.Add(a);
@@ -772,105 +767,84 @@ namespace AtCoder.ABC {
 
 			return list;
 		}
+
+		public static List<T> LongestIncreasingSubsequense<T>(IList<T> array) where T : IComparable {
+			return LongestIncreasingSubsequense(array, (x, y) => x.CompareTo(y));
+		}
 	}
 
-	public static class MathHelper {
-		public static int GetDist2(int x1, int y1, int x2, int y2) {
-			return ((x1 - x2) * (x1 - x2)) + ((y1 - y2) * (y1 - y2));
-		}
-		public static bool LineSegmentIntersectionJudge(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4) {
-			long s, t;
-			s = (x1 - x2) * (y3 - y1) - (y1 - y2) * (x3 - x1);
-			t = (x1 - x2) * (y4 - y1) - (y1 - y2) * (x4 - x1);
+	static class MathHelper {
 
-			if (s * t > 0)
+		public static T GetDist2<T>(T x1, T y1, T x2, T y2) where T : IComparable {
+			var op = IMathArithmeticOperator<T>.GetOperator();
+			return op.Add(op.Multiply(op.Substract(x1, x2), op.Substract(x1, x2)), op.Multiply(op.Substract(y1, y2), op.Substract(y1, y2)));
+		}
+
+		public static bool LineSegmentIntersectionJudge<T>(T x1, T y1, T x2, T y2, T x3, T y3, T x4, T y4) where T : IComparable {
+			var op = IMathArithmeticOperator<T>.GetOperator();
+			T s, t;
+			s = op.Substract(op.Multiply(op.Substract(x1, x2), op.Substract(y3, y1)), op.Multiply(op.Substract(y1, y2), op.Substract(x3, x1)));
+			t = op.Substract(op.Multiply(op.Substract(x1, x2), op.Substract(y4, y1)), op.Multiply(op.Substract(y1, y2), op.Substract(x4, x1)));
+
+			if (op.Multiply(s, t).CompareTo(op.Zero) > 0)
 				return false;
 
-			s = (x3 - x4) * (y1 - y3) - (y3 - y4) * (x1 - x3);
-			t = (x3 - x4) * (y2 - y3) - (y3 - y4) * (x2 - x3);
+			s = op.Substract(op.Multiply(op.Substract(x3, x4), op.Substract(y1, y3)), op.Multiply(op.Substract(y3, y4), op.Substract(x1, x3)));
+			t = op.Substract(op.Multiply(op.Substract(x3, x4), op.Substract(y2, y3)), op.Multiply(op.Substract(y3, y4), op.Substract(x2, x3)));
 
-			return s * t <= 0;
+			return op.Multiply(s, t).CompareTo(op.Zero) <= 0;
 		}
 
-		public static long Pow(long a, long b, long mod = 0L) {
-			var temp = a;
-			var ans = 1L;
-
-			for (int i = 1; i <= b; i <<= 1) {
-				if ((b & i) != 0) {
-					ans *= temp;
-					if (mod != 0) {
-						ans %= mod;
-					}
-				}
-
-				temp *= temp;
-				if (mod != 0) {
-					temp %= mod;
-				}
-			}
-
-			return ans;
+		public static T Pow<T>(T a, T b) where T : IComparable {
+			var op = IMathArithmeticOperator<T>.GetOperator();
+			return op.Pow(a, b);
 		}
 
-		public static int Get2PowerIndexRoundingOff(this long n) {
+		public static int Get2PowerIndexRoundingOff<T>(T n) where T : IComparable {
+			var op = IMathArithmeticOperator<T>.GetOperator();
 			var powerIndex = 0;
 
-			while (1 << powerIndex < n) {
+			while (op.BitShiftLeft(op.One, powerIndex).CompareTo(n) < 0) {
 				powerIndex++;
 			}
 
-			if (1 << powerIndex > n) {
+			if (op.BitShiftLeft(op.One, powerIndex).CompareTo(n) > 0) {
 				powerIndex--;
 			}
 
 			return powerIndex;
 		}
 
-		public static int Get2PowerIndexRoundingOff(this int n) {
-			var powerIndex = 0;
-
-			while (1 << powerIndex < n) {
-				powerIndex++;
+		public static T Max<T>(T a, T b) where T : IComparable {
+			if(a.CompareTo(b) > 0) {
+				return a;
+			} else {
+				return b;
 			}
+		}
 
-			if (1 << powerIndex > n) {
-				powerIndex--;
+		public static T Max<T>(T a, T b, T c) where T : IComparable {
+			return Max(a, Max(b, c));
+		}
+
+		public static T Max<T>(T a, T b, T c, T d) where T : IComparable {
+			return Max(d, Max(a, Max(b, c)));
+		}
+
+		public static T Min<T>(T a, T b) where T : IComparable {
+			if (a.CompareTo(b) > 0) {
+				return b;
+			} else {
+				return a;
 			}
-
-			return powerIndex;
 		}
 
-		public static int Max(int a, int b, int c) {
-			return Math.Max(a, Math.Max(b, c));
+		public static T Min<T>(T a, T b, T c) where T : IComparable {
+			return Min(a, Min(b, c));
 		}
 
-		public static int Max(int a, int b, int c, int d) {
-			return Math.Max(d, Math.Max(a, Math.Max(b, c)));
-		}
-
-		public static long Max(long a, long b, long c) {
-			return Math.Max(a, Math.Max(b, c));
-		}
-
-		public static long Max(long a, long b, long c, long d) {
-			return Math.Max(d, Math.Max(a, Math.Max(b, c)));
-		}
-
-		public static int Min(int a, int b, int c) {
-			return Math.Min(a, Math.Min(b, c));
-		}
-
-		public static int Min(int a, int b, int c, int d) {
-			return Math.Min(d, Math.Min(a, Math.Min(b, c)));
-		}
-
-		public static long Min(long a, long b, long c) {
-			return Math.Min(a, Math.Min(b, c));
-		}
-
-		public static long Min(long a, long b, long c, long d) {
-			return Math.Min(d, Math.Min(a, Math.Min(b, c)));
+		public static T Min<T>(T a, T b, T c, T d) where T : IComparable {
+			return Min(d, Min(a, Min(b, c)));
 		}
 	}
 
@@ -1099,112 +1073,575 @@ namespace AtCoder.ABC {
 		}
 	}
 
-	class DoubleMathProvider : MathProvider<double> {
-		public override double Divide(double a, double b) {
-			return a / b;
+	interface IMathArithmeticOperator<T> where T : IComparable {
+		public static IMathArithmeticOperator<T> GetOperator() {
+			var type = typeof(T);
+			if (type == typeof(ModInt)) {
+				return new ModIntOperaor() as IMathArithmeticOperator<T>;
+			}
+			if (type == typeof(int)) {
+				return new IntOperator() as IMathArithmeticOperator<T>;
+			}
+			if (type == typeof(long)) {
+				return new LongOperator() as IMathArithmeticOperator<T>;
+			}
+			if (type == typeof(double)) {
+				return new DoubleOperator() as IMathArithmeticOperator<T>;
+			}
+			return null;
 		}
 
-		public override double Multiply(double a, double b) {
-			return a * b;
-		}
+		public T MaxValue { get; }
+		public T MinValue { get; }
+		public T Zero { get; }
+		public T One { get; }
 
-		public override double Add(double a, double b) {
-			return a + b;
-		}
+		public T Add(T x, T y);
+		public T Substract(T x, T y);
+		public T Multiply(T x, T y);
+		public T Divide(T x, T y);
+		public T Pow(T x, T y);
+		public T Mod(T x, T y);
 
-		public override double Negate(double a) {
-			return -a;
-		}
+		public T Negate(T x);
+		public bool Equal(T x, T y);
 
-		public override double Zero() {
-			return 0.0;
-		}
+		public T Choose(T n, T r);
+		public T Factorial(T x);
 
-		public override double MaxValue() {
-			return double.MaxValue;
-		}
+		public T BitShiftLeft(T x, int y);
+		public T BitShiftRight(T x, int y);
 
-		public override double MinValue() {
-			return double.MinValue;
+		public T Max(T x, T y);
+		public T Min(T x, T y);
+	}
+
+	static class ChooseHelper<T, Top>
+			where Top : IMathArithmeticOperator<T>, new()
+			where T : IComparable {
+		public static Dictionary<(T n, T r), T> ChooseDictionary = new Dictionary<(T n, T r), T>();
+
+		public static T Choose(T n, T r) {
+			if ((n.CompareTo(r) < 0) || (n.CompareTo(0) < 0) || r.CompareTo(0) < 0) {
+				throw new Exception();
+			}
+
+			var op = new Top();
+
+			r = op.Min(r, op.Substract(n, r));
+
+			if (ChooseDictionary.ContainsKey((n, r)))
+				return ChooseDictionary[(n, r)];
+
+			if (op.Equal(r, op.One)) {
+				return n;
+			} else if (op.Equal(r, op.Zero)) {
+				return op.One;
+			}
+
+			var tempA = Choose(op.Substract(n, op.One), r);
+			var tempB = Choose(op.Substract(n, op.One), op.Substract(r, op.One));
+			var temp = op.Add(tempA, tempB);
+
+			ChooseDictionary.Add((n, r), temp);
+
+			return temp;
 		}
 	}
 
-	class IntMathProvider : MathProvider<int> {
-		public override int Divide(int a, int b) {
-			return a / b;
+	static class ModIntHelper {
+		public static readonly ModIntOperaor ModOperator = new ModIntOperaor();
+
+		public static ModInt[] FactorialArray;
+		public static ModInt[] FactorialInverseArray;
+		public static ModInt[] InverseArray;
+
+		static void ModChooseInit() {
+			var fac = new ModInt[Constants.ModInvMax];
+			var finv = new ModInt[Constants.ModInvMax];
+			var inv = new ModInt[Constants.ModInvMax];
+
+			fac[0] = fac[1] = 1;
+			finv[0] = finv[1] = 1;
+			inv[1] = 1;
+			for (int i = 2; i < Constants.ModInvMax; i++) {
+				fac[i] = fac[i - 1] * i;
+				inv[i] = Constants.ModValue / inv[Constants.ModValue % i] * (Constants.ModValue / i);
+				finv[i] = finv[i - 1] * inv[i];
+			}
+
+			FactorialArray = fac;
+			FactorialInverseArray = finv;
+			InverseArray = inv;
 		}
 
-		public override int Multiply(int a, int b) {
-			return a * b;
+		public static long Choose(long n, long r) {
+			if (n > Constants.ModInvMax)
+				throw new Exception();
+
+			if (FactorialArray is null)
+				ModChooseInit();
+
+			if (n < r || n < 0 || r < 0)
+				return 0;
+
+			return FactorialArray[n] * (FactorialInverseArray[r] * FactorialInverseArray[n - r]);
 		}
 
-		public override int Add(int a, int b) {
-			return a + b;
+		public static long ModInv(long a) {
+			return ModOperator.Pow(a, Constants.ModValue - 2);
 		}
 
-		public override int Negate(int a) {
-			return -a;
-		}
+		// 拡張ユークリッド版
+		public static long ModInv(long a, long m) {
+			var (b, u, v) = (m, 1L, 0L);
 
-		public override int Zero() {
-			return 0;
-		}
+			while (b > 0) {
+				var t = a / b;
+				a -= t * b;
+				(a, b) = (b, a);
+				u -= t * v;
+				(u, v) = (v, u);
+			}
 
-		public override int MaxValue() {
-			return int.MaxValue;
-		}
+			u %= m;
 
-		public override int MinValue() {
-			return int.MinValue;
+			if (u < 0)
+				u += m;
+
+			return u;
 		}
 	}
 
-	class LongMathProvider : MathProvider<long> {
-		public override long Divide(long a, long b) {
-			return a / b;
+	struct ModInt : IComparable {
+		public int Value;
+
+		public ModInt(long val) {
+			Value = (int)(val % Constants.ModValue);
 		}
 
-		public override long Multiply(long a, long b) {
-			return a * b;
+		public override bool Equals(object obj) {
+			if (obj is ModInt modInt)
+				return Equals(modInt.Value);
+			else if (obj is int integer)
+				return Value == integer;
+			else if (obj is long longer)
+				return Value == longer;
+			else
+				return false;
 		}
 
-		public override long Add(long a, long b) {
-			return a + b;
+		public override int GetHashCode() {
+			return Value.GetHashCode();
 		}
 
-		public override long Negate(long a) {
-			return -a;
+		public override string ToString() {
+			return Value.ToString();
 		}
 
-		public override long Zero() {
-			return 0;
+		public int CompareTo(object obj) {
+			if (obj is ModInt modInt)
+				return Value.CompareTo(modInt.Value);
+			else if (obj is int integer)
+				return Value.CompareTo(integer);
+			else if (obj is long longer)
+				return Value.CompareTo(longer);
+			else
+				throw new Exception();
 		}
 
-		public override long MaxValue() {
-			return long.MaxValue;
+		public static ModInt operator +(ModInt x, long y) {
+			return new ModInt(ModIntHelper.ModOperator.Add(x, y));
 		}
 
-		public override long MinValue() {
-			return long.MinValue;
+		public static ModInt operator -(ModInt x, long y) {
+			return new ModInt(ModIntHelper.ModOperator.Substract(x, y));
+		}
+
+		public static ModInt operator *(ModInt x, long y) {
+			return new ModInt(ModIntHelper.ModOperator.Multiply(x, y));
+		}
+
+		public static ModInt operator /(ModInt x, long y) {
+			return new ModInt(ModIntHelper.ModOperator.Divide(x, y));
+		}
+
+		public static ModInt operator %(ModInt x, long y) {
+			return new ModInt(ModIntHelper.ModOperator.Mod(x, y));
+		}
+
+		public static ModInt operator ++(ModInt x) {
+			return x + 1;
+		}
+
+		public static ModInt operator --(ModInt x) {
+			return x - 1;
+		}
+
+		public static ModInt operator +(ModInt x) {
+			return new ModInt(x.Value);
+		}
+
+		public static ModInt operator -(ModInt x) {
+			return new ModInt(ModIntHelper.ModOperator.Negate(x));
+		}
+
+		public static bool operator ==(ModInt x, long y) {
+			return x.Value == y;
+		}
+
+		public static bool operator !=(ModInt x, long y) {
+			return x.Value != y;
+		}
+
+		public static implicit operator ModInt(long x) {
+			return new ModInt(x);
+		}
+
+		public static implicit operator long(ModInt x) {
+			return x.Value;
 		}
 	}
 
-	abstract class MathProvider<T> where T : IComparable { 
-		public abstract T Divide(T a, T b);
-		public abstract T Multiply(T a, T b);
-		public abstract T Add(T a, T b);
-		public abstract T Negate(T a);
-		public virtual T Subtract(T a, T b) {
-			return Add(a, Negate(b));
+	struct IntOperator : IMathArithmeticOperator<int> {
+		public int MaxValue => int.MaxValue;
+
+		public int MinValue => int.MinValue;
+
+		public int Zero => 0;
+
+		public int One => 1;
+
+		public int Add(int x, int y) {
+			return x + y;
 		}
-		public virtual T Min(T a, T b) {
-			return a.CompareTo(b) > 0 ? b : a;
+
+		public int BitShiftLeft(int x, int y) {
+			return x << y;
 		}
-		public virtual T Max(T a, T b) {
-			return a.CompareTo(b) > 0 ? a : b;
+
+		public int BitShiftRight(int x, int y) {
+			return x >> y;
 		}
-		public abstract T Zero();
-		public abstract T MaxValue();
-		public abstract T MinValue();
+
+		public int Choose(int n, int r) {
+			return ChooseHelper<int, IntOperator>.Choose(n, r);
+		}
+
+		public bool Equal(int x, int y) {
+			return x == y;
+		}
+
+		public int Divide(int x, int y) {
+			return x / y;
+		}
+
+		public int Factorial(int x) {
+			var temp = 1;
+			for(int i = 2; i <= x; i++) {
+				temp *= i;
+			}
+
+			return temp;
+		}
+
+		public int Max(int x, int y) {
+			return Math.Max(x, y);
+		}
+
+		public int Min(int x, int y) {
+			return Math.Min(x, y);
+		}
+
+		public int Mod(int x, int y) {
+			return x % y;
+		}
+
+		public int Multiply(int x, int y) {
+			return x * y;
+		}
+
+		public int Negate(int x) {
+			return -x;
+		}
+
+		public int Pow(int x, int y) {
+			var ret = 1;
+			var temp = 1;
+
+			for(int i = 1; i <= y; i <<= 1) {
+				if ((i & y) != 0)
+					ret *= temp;
+
+				temp *= x;
+			}
+
+			return ret;
+		}
+
+		public int Substract(int x, int y) {
+			return x - y;
+		}
+	}
+
+	struct LongOperator : IMathArithmeticOperator<long> {
+		public long MaxValue => long.MaxValue;
+
+		public long MinValue => long.MinValue;
+
+		public long Zero => 0;
+
+		public long One => 1;
+
+		public long Add(long x, long y) {
+			return x + y;
+		}
+
+		public long BitShiftLeft(long x, int y) {
+			return x << y;
+		}
+
+		public long BitShiftRight(long x, int y) {
+			return x >> y;
+		}
+
+		public long Choose(long n, long r) {
+			return ChooseHelper<long, LongOperator>.Choose(n, r);
+		}
+
+		public bool Equal(long x, long y) {
+			return x == y;
+		}
+
+		public long Divide(long x, long y) {
+			return x / y;
+		}
+
+		public long Factorial(long x) {
+			var temp = 1L;
+			for (long i = 2; i <= x; i++) {
+				temp *= i;
+			}
+
+			return temp;
+		}
+
+		public long Max(long x, long y) {
+			return Math.Max(x, y);
+		}
+
+		public long Min(long x, long y) {
+			return Math.Min(x, y);
+		}
+
+		public long Mod(long x, long y) {
+			return x % y;
+		}
+
+		public long Multiply(long x, long y) {
+			return x * y;
+		}
+
+		public long Negate(long x) {
+			return -x;
+		}
+
+		public long Pow(long x, long y) {
+			var ret = 1L;
+			var temp = 1L;
+
+			for (long i = 1; i <= y; i <<= 1) {
+				if ((i & y) != 0)
+					ret *= temp;
+
+				temp *= x;
+			}
+
+			return ret;
+		}
+
+		public long Substract(long x, long y) {
+			return x - y;
+		}
+	}
+
+	struct DoubleOperator : IMathArithmeticOperator<double> {
+		public double MaxValue => double.MaxValue;
+
+		public double MinValue => double.MinValue;
+
+		public double Zero => 0;
+
+		public double One => 1;
+
+		public double Add(double x, double y) {
+			return x + y;
+		}
+
+		public double BitShiftLeft(double x, int y) {
+			throw new NotImplementedException();
+		}
+
+		public double BitShiftRight(double x, int y) {
+			throw new NotImplementedException();
+		}
+
+		public double Choose(double n, double r) {
+			return ChooseHelper<double, DoubleOperator>.Choose(n, r);
+		}
+
+		public bool Equal(double x, double y) {
+			return x == y;
+		}
+
+		public double Divide(double x, double y) {
+			return x / y;
+		}
+
+		public double Factorial(double x) {
+			var temp = 1.0;
+			for (double i = 2; i <= x; i++) {
+				temp *= i;
+			}
+
+			return temp;
+		}
+
+		public double Max(double x, double y) {
+			return Math.Max(x, y);
+		}
+
+		public double Min(double x, double y) {
+			return Math.Min(x, y);
+		}
+
+		public double Mod(double x, double y) {
+			return x % y;
+		}
+
+		public double Multiply(double x, double y) {
+			return x * y;
+		}
+
+		public double Negate(double x) {
+			return -x;
+		}
+
+		public double Pow(double x, double y) {
+			return Math.Pow(x, y);
+		}
+
+		public double Substract(double x, double y) {
+			return x - y;
+		}
+	}
+
+	struct ModIntOperaor : IMathArithmeticOperator<long> {
+		public long MaxValue => int.MaxValue;
+
+		public long MinValue => int.MinValue;
+
+		public long Zero => 0;
+
+		public long One => 1;
+
+		public long Add(long x, long y) {
+			return (x + y) % Constants.ModValue;
+		}
+
+		public long BitShiftLeft(long x, int y) {
+			var t =  x << y;
+
+			while (t < 0)
+				t += Constants.ModValue;
+
+			return t;
+		}
+
+		public long BitShiftRight(long x, int y) {
+			var t = x << y;
+
+			while (t < 0)
+				t += Constants.ModValue;
+
+			return t;
+		}
+
+		public long Choose(long n, long r) {
+			return ModIntHelper.Choose(n, r);
+		}
+
+		public bool Equal(long x, long y) {
+			return x == y;
+		}
+
+		public long Divide(long x, long y) {
+			return x * ModIntHelper.ModInv(y);
+		}
+
+		public long Factorial(long x) {
+			var temp = 1L;
+			for (long i = 2; i <= x; i++) {
+				temp *= i;
+				temp %= Constants.ModValue;
+			}
+
+			return temp;
+		}
+
+		public long Max(long x, long y) {
+			return Math.Max(x, y);
+		}
+
+		public long Min(long x, long y) {
+			return Math.Min(x, y);
+		}
+
+		public long Mod(long x, long y) {
+			return x % y;
+		}
+
+		public long Multiply(long x, long y) {
+			return (x * y) % Constants.ModValue;
+		}
+
+		public long Negate(long x) {
+			x = -x;
+
+			while (x < 0)
+				x += Constants.ModValue;
+
+			x %= Constants.ModValue;
+
+			return x;
+		}
+
+		public long Pow(long x, long y) {
+			var ret = 1L;
+			var temp = 1L;
+
+			for (long i = 1; i <= y; i <<= 1) {
+				if ((i & y) != 0) {
+					ret *= temp;
+					ret %= Constants.ModValue;
+				}
+
+				temp *= x;
+				temp %= Constants.ModValue;
+			}
+
+			return ret;
+		}
+
+		public long Substract(long x, long y) {
+			var ret = x - y;
+
+			while (ret < 0)
+				ret += Constants.ModValue;
+
+			ret %= Constants.ModValue;
+
+			return ret;
+		}
 	}
 }
