@@ -16,13 +16,11 @@ namespace AtCoder.ABC {
 	class QuestionA {
 		public static void Main(string[] args) {
 			var scanner = new Scanner();
-
-			var s = scanner.Int();
-			Console.WriteLine(string.Join('\n', new PermutaionInt(s).GetAllPermutation().Select(x => string.Join(' ', x))));
 		}
 	}
 
 	static class Constants {
+		//public static readonly int ModValue = 13;
 		public static readonly int ModValue = 1000000007;
 		public static readonly int ModInvMax = 510000;
 	}
@@ -131,12 +129,12 @@ namespace AtCoder.ABC {
 			}
 		}
 
-		public PrefixSumArray(int length) : this(length, new T[length]) { }
+		public PrefixSumArray(int length) : this(new T[length]) { }
 
-		public PrefixSumArray(int length, T[] array) {
+		public PrefixSumArray(T[] array) {
 			math_ = IMathArithmeticOperator<T>.GetOperator();
 
-			length_ = length;
+			length_ = array.Length;
 			array_ = array;
 		}
 
@@ -151,6 +149,136 @@ namespace AtCoder.ABC {
 
 		IEnumerator IEnumerable.GetEnumerator() {
 			return array_.GetEnumerator();
+		}
+	}
+
+	class ModIntBefore {
+		private readonly int MAX;
+		private readonly long MOD;
+
+		private long[] fac_;
+		private long[] finv_;
+		private long[] inv_;
+
+		public long Number;
+
+		public ModIntBefore(long integer, long mod = 1000000007, int max = 510000) {
+			Number = integer;
+			MOD = mod;
+			MAX = max;
+		}
+
+		public long Plus(long a) {
+			Number = (Number + a) % MOD;
+			return Number;
+		}
+
+		public long Minus(long a) {
+			var temp = Number - a;
+
+			if (temp < 0) {
+				temp += MOD;
+			}
+
+			Number = temp % MOD;
+			return Number;
+		}
+
+		public long Multi(long a) {
+			Number = (Number * a) % MOD;
+			return Number;
+		}
+
+		public long Div(long a) {
+			Multi(ModInv(a));
+			return Number;
+		}
+
+
+		private long ModInv(long a) {
+			return ModPow(a, MOD - 2);
+		}
+
+		// 拡張ユークリッド版
+		private long ModInv(long a, long m) {
+			var (b, u, v) = (m, 1L, 0L);
+
+			while (b > 0) {
+				var t = a / b;
+				a -= t * b;
+				(a, b) = (b, a);
+				u -= t * v;
+				(u, v) = (v, u);
+			}
+
+			u %= m;
+
+			if (u < 0) {
+				u += m;
+			}
+
+			return u;
+		}
+		public long Pow(long a) {
+			Number = ModPow(Number, a);
+			return Number;
+		}
+
+		private long ModPow(long n, long k) {
+			var answer = 1L;
+			var tempMultiple = n;
+
+			while (k > 0) {
+				if ((k & 1) != 0) {
+					answer *= tempMultiple;
+					answer %= MOD;
+				}
+
+				tempMultiple *= tempMultiple;
+				tempMultiple %= MOD;
+				k >>= 1;
+			}
+
+			return answer;
+		}
+
+		// 二項係数計算
+		public long BinomialCoefficients(int n, int k) {
+			if (n < k)
+				return 0;
+			if (n < 0 || k < 0)
+				return 0;
+
+			if (fac_ is null) {
+				BinomialCoefficientsInit();
+			}
+
+			return fac_[n] * (finv_[k] * finv_[n - k] % MOD) % MOD;
+		}
+
+		private (long[] fac, long[] finv, long[] inv) BinomialCoefficientsInit() {
+			fac_ = new long[MAX];
+			finv_ = new long[MAX];
+			inv_ = new long[MAX];
+
+			fac_[0] = fac_[1] = 1;
+			finv_[0] = finv_[1] = 1;
+			inv_[1] = 1;
+			for (int i = 2; i < MAX; i++) {
+				fac_[i] = fac_[i - 1] * i % MOD;
+				inv_[i] = MOD - inv_[MOD % i] * (MOD / i) % MOD;
+				finv_[i] = finv_[i - 1] * inv_[i] % MOD;
+			}
+
+			return (fac_, finv_, inv_);
+		}
+
+		public override string ToString() {
+			return Number.ToString();
+		}
+
+		public override int GetHashCode() {
+			return Number.GetHashCode();
 		}
 	}
 
@@ -1214,7 +1342,7 @@ namespace AtCoder.ABC {
 	}
 
 	struct ModInt : IComparable {
-		public int Value;
+		public long Value;
 
 		public ModInt(long val) {
 			Value = (int)(val % Constants.ModValue);
@@ -1367,13 +1495,13 @@ namespace AtCoder.ABC {
 
 		public int Pow(int x, int y) {
 			var ret = 1;
-			var temp = 1;
+			var temp = x;
 
 			for(int i = 1; i <= y; i <<= 1) {
 				if ((i & y) != 0)
 					ret *= temp;
 
-				temp *= x;
+				temp *= temp;
 			}
 
 			return ret;
@@ -1448,13 +1576,13 @@ namespace AtCoder.ABC {
 
 		public long Pow(long x, long y) {
 			var ret = 1L;
-			var temp = 1L;
+			var temp = x;
 
 			for (long i = 1; i <= y; i <<= 1) {
 				if ((i & y) != 0)
 					ret *= temp;
 
-				temp *= x;
+				temp *= temp;
 			}
 
 			return ret;
@@ -1536,21 +1664,21 @@ namespace AtCoder.ABC {
 		}
 	}
 
-	struct ModIntOperaor : IMathArithmeticOperator<long> {
-		public long MaxValue => int.MaxValue;
+	struct ModIntOperaor : IMathArithmeticOperator<ModInt> {
+		public ModInt MaxValue => int.MaxValue;
 
-		public long MinValue => int.MinValue;
+		public ModInt MinValue => int.MinValue;
 
-		public long Zero => 0;
+		public ModInt Zero => 0;
 
-		public long One => 1;
+		public ModInt One => 1;
 
-		public long Add(long x, long y) {
-			return (x + y) % Constants.ModValue;
+		public ModInt Add(ModInt x, ModInt y) {
+			return (x.Value + y.Value) % Constants.ModValue;
 		}
 
-		public long BitShiftLeft(long x, int y) {
-			var t =  x << y;
+		public ModInt BitShiftLeft(ModInt x, int y) {
+			var t =  x.Value << y;
 
 			while (t < 0)
 				t += Constants.ModValue;
@@ -1558,8 +1686,8 @@ namespace AtCoder.ABC {
 			return t;
 		}
 
-		public long BitShiftRight(long x, int y) {
-			var t = x << y;
+		public ModInt BitShiftRight(ModInt x, int y) {
+			var t = x.Value << y;
 
 			while (t < 0)
 				t += Constants.ModValue;
@@ -1567,21 +1695,21 @@ namespace AtCoder.ABC {
 			return t;
 		}
 
-		public long Choose(long n, long r) {
+		public ModInt Choose(ModInt n, ModInt r) {
 			return ModIntHelper.Choose(n, r);
 		}
 
-		public bool Equal(long x, long y) {
-			return x == y;
+		public bool Equal(ModInt x, ModInt y) {
+			return x.Value == y.Value;
 		}
 
-		public long Divide(long x, long y) {
+		public ModInt Divide(ModInt x, ModInt y) {
 			return x * ModIntHelper.ModInv(y);
 		}
 
-		public long Factorial(long x) {
+		public ModInt Factorial(ModInt x) {
 			var temp = 1L;
-			for (long i = 2; i <= x; i++) {
+			for (long i = 2; i <= x.Value; i++) {
 				temp *= i;
 				temp %= Constants.ModValue;
 			}
@@ -1589,52 +1717,52 @@ namespace AtCoder.ABC {
 			return temp;
 		}
 
-		public long Max(long x, long y) {
-			return Math.Max(x, y);
+		public ModInt Max(ModInt x, ModInt y) {
+			return Math.Max(x.Value, y.Value);
 		}
 
-		public long Min(long x, long y) {
-			return Math.Min(x, y);
+		public ModInt Min(ModInt x, ModInt y) {
+			return Math.Min(x.Value, y.Value);
 		}
 
-		public long Mod(long x, long y) {
-			return x % y;
+		public ModInt Mod(ModInt x, ModInt y) {
+			return x.Value % y.Value;
 		}
 
-		public long Multiply(long x, long y) {
-			return (x * y) % Constants.ModValue;
+		public ModInt Multiply(ModInt x, ModInt y) {
+			return (x.Value * y.Value) % Constants.ModValue;
 		}
 
-		public long Negate(long x) {
-			x = -x;
+		public ModInt Negate(ModInt x) {
+			var y = -x.Value;
 
-			while (x < 0)
-				x += Constants.ModValue;
+			while (y < 0)
+				y += Constants.ModValue;
 
-			x %= Constants.ModValue;
+			y %= Constants.ModValue;
 
-			return x;
+			return y;
 		}
 
-		public long Pow(long x, long y) {
-			var ret = 1L;
-			var temp = 1L;
-
-			for (long i = 1; i <= y; i <<= 1) {
-				if ((i & y) != 0) {
-					ret *= temp;
-					ret %= Constants.ModValue;
+		public ModInt Pow(ModInt x, ModInt y) {
+			var res = 1L;
+			var a = x.Value;
+			var n = y.Value;
+			while (n > 0) {
+				if ((n & 1) != 0) {
+					res *= a;
+					res %= Constants.ModValue;
 				}
 
-				temp *= x;
-				temp %= Constants.ModValue;
+				a *= a;
+				a %= Constants.ModValue;
+				n >>= 1;
 			}
-
-			return ret;
+			return res;
 		}
 
-		public long Substract(long x, long y) {
-			var ret = x - y;
+		public ModInt Substract(ModInt x, ModInt y) {
+			var ret = x.Value - y.Value;
 
 			while (ret < 0)
 				ret += Constants.ModValue;
