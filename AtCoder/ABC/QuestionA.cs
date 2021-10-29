@@ -20,9 +20,8 @@ namespace AtCoder.ABC {
 	}
 
 	static class Constants {
-		//public static readonly int ModValue = 13;
-		public static readonly int ModValue = 1000000007;
-		public static readonly int ModInvMax = 510000;
+		public static readonly int Mod = 1000000007;
+		public static readonly int InverseMax = 510000;
 	}
 
 	class CompressArray<T> : IEnumerable<(long, T)> {
@@ -103,7 +102,7 @@ namespace AtCoder.ABC {
 	}
 
 	class PrefixSumArray<T> : IEnumerable<T>
-		where T : IComparable {
+		where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 		readonly IMathArithmeticOperator<T> math_;
 
 		int length_;
@@ -152,137 +151,7 @@ namespace AtCoder.ABC {
 		}
 	}
 
-	class ModIntBefore {
-		private readonly int MAX;
-		private readonly long MOD;
-
-		private long[] fac_;
-		private long[] finv_;
-		private long[] inv_;
-
-		public long Number;
-
-		public ModIntBefore(long integer, long mod = 1000000007, int max = 510000) {
-			Number = integer;
-			MOD = mod;
-			MAX = max;
-		}
-
-		public long Plus(long a) {
-			Number = (Number + a) % MOD;
-			return Number;
-		}
-
-		public long Minus(long a) {
-			var temp = Number - a;
-
-			if (temp < 0) {
-				temp += MOD;
-			}
-
-			Number = temp % MOD;
-			return Number;
-		}
-
-		public long Multi(long a) {
-			Number = (Number * a) % MOD;
-			return Number;
-		}
-
-		public long Div(long a) {
-			Multi(ModInv(a));
-			return Number;
-		}
-
-
-		private long ModInv(long a) {
-			return ModPow(a, MOD - 2);
-		}
-
-		// 拡張ユークリッド版
-		private long ModInv(long a, long m) {
-			var (b, u, v) = (m, 1L, 0L);
-
-			while (b > 0) {
-				var t = a / b;
-				a -= t * b;
-				(a, b) = (b, a);
-				u -= t * v;
-				(u, v) = (v, u);
-			}
-
-			u %= m;
-
-			if (u < 0) {
-				u += m;
-			}
-
-			return u;
-		}
-		public long Pow(long a) {
-			Number = ModPow(Number, a);
-			return Number;
-		}
-
-		private long ModPow(long n, long k) {
-			var answer = 1L;
-			var tempMultiple = n;
-
-			while (k > 0) {
-				if ((k & 1) != 0) {
-					answer *= tempMultiple;
-					answer %= MOD;
-				}
-
-				tempMultiple *= tempMultiple;
-				tempMultiple %= MOD;
-				k >>= 1;
-			}
-
-			return answer;
-		}
-
-		// 二項係数計算
-		public long BinomialCoefficients(int n, int k) {
-			if (n < k)
-				return 0;
-			if (n < 0 || k < 0)
-				return 0;
-
-			if (fac_ is null) {
-				BinomialCoefficientsInit();
-			}
-
-			return fac_[n] * (finv_[k] * finv_[n - k] % MOD) % MOD;
-		}
-
-		private (long[] fac, long[] finv, long[] inv) BinomialCoefficientsInit() {
-			fac_ = new long[MAX];
-			finv_ = new long[MAX];
-			inv_ = new long[MAX];
-
-			fac_[0] = fac_[1] = 1;
-			finv_[0] = finv_[1] = 1;
-			inv_[1] = 1;
-			for (int i = 2; i < MAX; i++) {
-				fac_[i] = fac_[i - 1] * i % MOD;
-				inv_[i] = MOD - inv_[MOD % i] * (MOD / i) % MOD;
-				finv_[i] = finv_[i - 1] * inv_[i] % MOD;
-			}
-
-			return (fac_, finv_, inv_);
-		}
-
-		public override string ToString() {
-			return Number.ToString();
-		}
-
-		public override int GetHashCode() {
-			return Number.GetHashCode();
-		}
-	}
-
-	class PrefixSumMatrix<T> where T : IComparable {
+	class PrefixSumMatrix<T> where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 		readonly IMathArithmeticOperator<T> math_;
 
 		int h_;
@@ -614,7 +483,7 @@ namespace AtCoder.ABC {
 		}
 	}
 
-	class Flow<T> where T : IComparable {
+	class Flow<T> where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 		IMathArithmeticOperator<T> math_;
 
 		public Flow(int node_size) {
@@ -698,7 +567,7 @@ namespace AtCoder.ABC {
 	}
 
 	static class DPHelper {
-		public static T DoKnapSackDP<T>((int weight, T worth)[] ww, int maxWeight) where T : struct, IComparable {
+		public static T DoKnapSackDP<T>((int weight, T worth)[] ww, int maxWeight) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 			var op = IMathArithmeticOperator<T>.GetOperator();
 			
 			var dp = new T[maxWeight + 1];
@@ -719,7 +588,7 @@ namespace AtCoder.ABC {
 			return dp[maxWeight];
 		}
 
-		public static T DoLimitKnapSackDP<T>((int weight, T worth)[] ww, int maxWeight, int limitNum) where T : struct, IComparable {
+		public static T DoLimitKnapSackDP<T>((int weight, T worth)[] ww, int maxWeight, int limitNum) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 			var op = IMathArithmeticOperator<T>.GetOperator();
 
 			var dp = new T[limitNum + 1, maxWeight + 1];
@@ -749,11 +618,11 @@ namespace AtCoder.ABC {
 	}
 
 	static class HelperExtensions {
-		public static void UpdateMax<T>(this ref T max, T val) where T : struct, IComparable {
+		public static void UpdateMax<T>(this ref T max, T val) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 			max = MathHelper.Max(max, val);
 		}
 
-		public static void UpdateMin<T>(this ref T max, T val) where T : struct, IComparable {
+		public static void UpdateMin<T>(this ref T max, T val) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 			max = MathHelper.Min(max, val);
 		}
 
@@ -902,13 +771,12 @@ namespace AtCoder.ABC {
 	}
 
 	static class MathHelper {
-
-		public static T GetDist2<T>(T x1, T y1, T x2, T y2) where T : IComparable {
+		public static T GetDist2<T>(T x1, T y1, T x2, T y2) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 			var op = IMathArithmeticOperator<T>.GetOperator();
 			return op.Add(op.Multiply(op.Substract(x1, x2), op.Substract(x1, x2)), op.Multiply(op.Substract(y1, y2), op.Substract(y1, y2)));
 		}
 
-		public static bool LineSegmentIntersectionJudge<T>(T x1, T y1, T x2, T y2, T x3, T y3, T x4, T y4) where T : IComparable {
+		public static bool LineSegmentIntersectionJudge<T>(T x1, T y1, T x2, T y2, T x3, T y3, T x4, T y4) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 			var op = IMathArithmeticOperator<T>.GetOperator();
 			T s, t;
 			s = op.Substract(op.Multiply(op.Substract(x1, x2), op.Substract(y3, y1)), op.Multiply(op.Substract(y1, y2), op.Substract(x3, x1)));
@@ -923,12 +791,12 @@ namespace AtCoder.ABC {
 			return op.Multiply(s, t).CompareTo(op.Zero) <= 0;
 		}
 
-		public static T Pow<T>(T a, T b) where T : IComparable {
+		public static T Pow<T>(T a, T b) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 			var op = IMathArithmeticOperator<T>.GetOperator();
 			return op.Pow(a, b);
 		}
 
-		public static int Get2PowerIndexRoundingOff<T>(T n) where T : IComparable {
+		public static int Get2PowerIndexRoundingOff<T>(T n) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 			var op = IMathArithmeticOperator<T>.GetOperator();
 			var powerIndex = 0;
 
@@ -943,7 +811,7 @@ namespace AtCoder.ABC {
 			return powerIndex;
 		}
 
-		public static T Max<T>(T a, T b) where T : IComparable {
+		public static T Max<T>(T a, T b) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 			if(a.CompareTo(b) > 0) {
 				return a;
 			} else {
@@ -951,15 +819,15 @@ namespace AtCoder.ABC {
 			}
 		}
 
-		public static T Max<T>(T a, T b, T c) where T : IComparable {
+		public static T Max<T>(T a, T b, T c) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 			return Max(a, Max(b, c));
 		}
 
-		public static T Max<T>(T a, T b, T c, T d) where T : IComparable {
+		public static T Max<T>(T a, T b, T c, T d) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 			return Max(d, Max(a, Max(b, c)));
 		}
 
-		public static T Min<T>(T a, T b) where T : IComparable {
+		public static T Min<T>(T a, T b) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 			if (a.CompareTo(b) > 0) {
 				return b;
 			} else {
@@ -967,11 +835,11 @@ namespace AtCoder.ABC {
 			}
 		}
 
-		public static T Min<T>(T a, T b, T c) where T : IComparable {
+		public static T Min<T>(T a, T b, T c) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 			return Min(a, Min(b, c));
 		}
 
-		public static T Min<T>(T a, T b, T c, T d) where T : IComparable {
+		public static T Min<T>(T a, T b, T c, T d) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 			return Min(d, Min(a, Min(b, c)));
 		}
 	}
@@ -1201,7 +1069,7 @@ namespace AtCoder.ABC {
 		}
 	}
 
-	interface IMathArithmeticOperator<T> where T : IComparable {
+	interface IMathArithmeticOperator<T> where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 		public static IMathArithmeticOperator<T> GetOperator() {
 			var type = typeof(T);
 			if (type == typeof(ModInt)) {
@@ -1216,6 +1084,7 @@ namespace AtCoder.ABC {
 			if (type == typeof(double)) {
 				return new DoubleOperator() as IMathArithmeticOperator<T>;
 			}
+
 			return null;
 		}
 
@@ -1232,7 +1101,6 @@ namespace AtCoder.ABC {
 		public T Mod(T x, T y);
 
 		public T Negate(T x);
-		public bool Equal(T x, T y);
 
 		public T Choose(T n, T r);
 		public T Factorial(T x);
@@ -1245,25 +1113,25 @@ namespace AtCoder.ABC {
 	}
 
 	static class ChooseHelper<T, Top>
-			where Top : IMathArithmeticOperator<T>, new()
-			where T : IComparable {
+			where Top : struct, IMathArithmeticOperator<T>
+			where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 		public static Dictionary<(T n, T r), T> ChooseDictionary = new Dictionary<(T n, T r), T>();
 
 		public static T Choose(T n, T r) {
-			if ((n.CompareTo(r) < 0) || (n.CompareTo(0) < 0) || r.CompareTo(0) < 0) {
+			var op = new Top();
+
+			if ((n.CompareTo(r) < 0) || (n.CompareTo(op.Zero) < 0) || r.CompareTo(op.Zero) < 0) {
 				throw new Exception();
 			}
-
-			var op = new Top();
 
 			r = op.Min(r, op.Substract(n, r));
 
 			if (ChooseDictionary.ContainsKey((n, r)))
 				return ChooseDictionary[(n, r)];
 
-			if (op.Equal(r, op.One)) {
+			if (r.Equals(op.One)) {
 				return n;
-			} else if (op.Equal(r, op.Zero)) {
+			} else if (r.Equals(op.Zero)) {
 				return op.One;
 			}
 
@@ -1285,16 +1153,16 @@ namespace AtCoder.ABC {
 		public static ModInt[] InverseArray;
 
 		static void ModChooseInit() {
-			var fac = new ModInt[Constants.ModInvMax];
-			var finv = new ModInt[Constants.ModInvMax];
-			var inv = new ModInt[Constants.ModInvMax];
+			var fac = new ModInt[Constants.InverseMax];
+			var finv = new ModInt[Constants.InverseMax];
+			var inv = new ModInt[Constants.InverseMax];
 
 			fac[0] = fac[1] = 1;
 			finv[0] = finv[1] = 1;
 			inv[1] = 1;
-			for (int i = 2; i < Constants.ModInvMax; i++) {
+			for (int i = 2; i < Constants.InverseMax; i++) {
 				fac[i] = fac[i - 1] * i;
-				inv[i] = Constants.ModValue / inv[Constants.ModValue % i] * (Constants.ModValue / i);
+				inv[i] = Constants.Mod - inv[Constants.Mod % i] * (Constants.Mod / i);
 				finv[i] = finv[i - 1] * inv[i];
 			}
 
@@ -1304,7 +1172,7 @@ namespace AtCoder.ABC {
 		}
 
 		public static long Choose(long n, long r) {
-			if (n > Constants.ModInvMax)
+			if (n > Constants.InverseMax)
 				throw new Exception();
 
 			if (FactorialArray is null)
@@ -1317,7 +1185,7 @@ namespace AtCoder.ABC {
 		}
 
 		public static long ModInv(long a) {
-			return ModOperator.Pow(a, Constants.ModValue - 2);
+			return ModOperator.Pow(a, Constants.Mod - 2);
 		}
 
 		// 拡張ユークリッド版
@@ -1341,11 +1209,11 @@ namespace AtCoder.ABC {
 		}
 	}
 
-	struct ModInt : IComparable {
+	struct ModInt : IComparable, IComparable<ModInt>, IConvertible, IEquatable<ModInt>, IFormattable {
 		public long Value;
 
 		public ModInt(long val) {
-			Value = (int)(val % Constants.ModValue);
+			Value = (int)(val % Constants.Mod);
 		}
 
 		public override bool Equals(object obj) {
@@ -1374,8 +1242,90 @@ namespace AtCoder.ABC {
 				return Value.CompareTo(integer);
 			else if (obj is long longer)
 				return Value.CompareTo(longer);
+			else if (obj is double doubler)
+				return Value.CompareTo(doubler);
 			else
 				throw new Exception();
+		}
+
+		public int CompareTo(ModInt other) {
+			return Value.CompareTo(other.Value);
+		}
+
+		public TypeCode GetTypeCode() {
+			return TypeCode.Object;
+		}
+
+		public bool ToBoolean(IFormatProvider provider) {
+			return Convert.ToBoolean(Value, provider);
+		}
+
+		public byte ToByte(IFormatProvider provider) {
+			return Convert.ToByte(Value, provider);
+		}
+
+		public char ToChar(IFormatProvider provider) {
+			return Convert.ToChar(Value, provider);
+		}
+
+		public DateTime ToDateTime(IFormatProvider provider) {
+			return Convert.ToDateTime(Value, provider);
+		}
+
+		public decimal ToDecimal(IFormatProvider provider) {
+			return Convert.ToDecimal(Value, provider);
+		}
+
+		public double ToDouble(IFormatProvider provider) {
+			return Convert.ToDouble(Value, provider);
+		}
+
+		public short ToInt16(IFormatProvider provider) {
+			return Convert.ToInt16(Value, provider);
+		}
+
+		public int ToInt32(IFormatProvider provider) {
+			return Convert.ToInt32(Value, provider);
+		}
+
+		public long ToInt64(IFormatProvider provider) {
+			return Convert.ToInt64(Value, provider);
+		}
+
+		public sbyte ToSByte(IFormatProvider provider) {
+			return Convert.ToSByte(Value, provider);
+		}
+
+		public float ToSingle(IFormatProvider provider) {
+			return Convert.ToSingle(Value, provider);
+		}
+
+		public string ToString(IFormatProvider provider) {
+			return Convert.ToString(Value, provider);
+		}
+
+		public object ToType(Type conversionType, IFormatProvider provider) {
+			throw new InvalidCastException();
+		}
+
+		public ushort ToUInt16(IFormatProvider provider) {
+			return Convert.ToUInt16(Value, provider);
+		}
+
+		public uint ToUInt32(IFormatProvider provider) {
+			return Convert.ToUInt32(Value, provider);
+		}
+
+		public ulong ToUInt64(IFormatProvider provider) {
+			return Convert.ToUInt64(Value, provider);
+		}
+
+		public bool Equals( ModInt other) {
+			return Value.Equals(other.Value);
+		}
+
+		public string ToString(string format, IFormatProvider formatProvider) {
+			return Value.ToString(format, formatProvider);
 		}
 
 		public static ModInt operator +(ModInt x, long y) {
@@ -1415,15 +1365,18 @@ namespace AtCoder.ABC {
 		}
 
 		public static bool operator ==(ModInt x, long y) {
-			return x.Value == y;
+			return x.Equals(y);
 		}
 
 		public static bool operator !=(ModInt x, long y) {
-			return x.Value != y;
+			return x.Equals(y) == false;
 		}
 
 		public static implicit operator ModInt(long x) {
-			return new ModInt(x);
+			while (x < 0)
+				x += Constants.Mod;
+
+			return new ModInt(x % Constants.Mod);
 		}
 
 		public static implicit operator long(ModInt x) {
@@ -1454,10 +1407,6 @@ namespace AtCoder.ABC {
 
 		public int Choose(int n, int r) {
 			return ChooseHelper<int, IntOperator>.Choose(n, r);
-		}
-
-		public bool Equal(int x, int y) {
-			return x == y;
 		}
 
 		public int Divide(int x, int y) {
@@ -1537,10 +1486,6 @@ namespace AtCoder.ABC {
 			return ChooseHelper<long, LongOperator>.Choose(n, r);
 		}
 
-		public bool Equal(long x, long y) {
-			return x == y;
-		}
-
 		public long Divide(long x, long y) {
 			return x / y;
 		}
@@ -1618,10 +1563,6 @@ namespace AtCoder.ABC {
 			return ChooseHelper<double, DoubleOperator>.Choose(n, r);
 		}
 
-		public bool Equal(double x, double y) {
-			return x == y;
-		}
-
 		public double Divide(double x, double y) {
 			return x / y;
 		}
@@ -1665,32 +1606,32 @@ namespace AtCoder.ABC {
 	}
 
 	struct ModIntOperaor : IMathArithmeticOperator<ModInt> {
-		public ModInt MaxValue => int.MaxValue;
+		public ModInt MaxValue => Constants.Mod - 1;
 
-		public ModInt MinValue => int.MinValue;
+		public ModInt MinValue => 0;
 
 		public ModInt Zero => 0;
 
 		public ModInt One => 1;
 
 		public ModInt Add(ModInt x, ModInt y) {
-			return (x.Value + y.Value) % Constants.ModValue;
+			return (x.Value + y.Value) % Constants.Mod;
 		}
 
 		public ModInt BitShiftLeft(ModInt x, int y) {
-			var t =  x.Value << y;
+			long t =  x.Value << y;
 
 			while (t < 0)
-				t += Constants.ModValue;
+				t += Constants.Mod;
 
 			return t;
 		}
 
 		public ModInt BitShiftRight(ModInt x, int y) {
-			var t = x.Value << y;
+			long t = x.Value >> y;
 
 			while (t < 0)
-				t += Constants.ModValue;
+				t += Constants.Mod;
 
 			return t;
 		}
@@ -1699,19 +1640,15 @@ namespace AtCoder.ABC {
 			return ModIntHelper.Choose(n, r);
 		}
 
-		public bool Equal(ModInt x, ModInt y) {
-			return x.Value == y.Value;
-		}
-
 		public ModInt Divide(ModInt x, ModInt y) {
-			return x * ModIntHelper.ModInv(y);
+			return x.Value * ModIntHelper.ModInv(y);
 		}
 
 		public ModInt Factorial(ModInt x) {
-			var temp = 1L;
+			long temp = 1L;
 			for (long i = 2; i <= x.Value; i++) {
 				temp *= i;
-				temp %= Constants.ModValue;
+				temp %= Constants.Mod;
 			}
 
 			return temp;
@@ -1730,44 +1667,44 @@ namespace AtCoder.ABC {
 		}
 
 		public ModInt Multiply(ModInt x, ModInt y) {
-			return (x.Value * y.Value) % Constants.ModValue;
+			return (x.Value * y.Value) % Constants.Mod;
 		}
 
 		public ModInt Negate(ModInt x) {
-			var y = -x.Value;
+			long y = -x.Value;
 
 			while (y < 0)
-				y += Constants.ModValue;
+				y += Constants.Mod;
 
-			y %= Constants.ModValue;
+			y %= Constants.Mod;
 
 			return y;
 		}
 
 		public ModInt Pow(ModInt x, ModInt y) {
-			var res = 1L;
-			var a = x.Value;
-			var n = y.Value;
+			long res = 1L;
+			long a = x.Value;
+			long n = y.Value;
 			while (n > 0) {
 				if ((n & 1) != 0) {
 					res *= a;
-					res %= Constants.ModValue;
+					res %= Constants.Mod;
 				}
 
 				a *= a;
-				a %= Constants.ModValue;
+				a %= Constants.Mod;
 				n >>= 1;
 			}
 			return res;
 		}
 
 		public ModInt Substract(ModInt x, ModInt y) {
-			var ret = x.Value - y.Value;
+			long ret = x.Value - y.Value;
 
 			while (ret < 0)
-				ret += Constants.ModValue;
+				ret += Constants.Mod;
 
-			ret %= Constants.ModValue;
+			ret %= Constants.Mod;
 
 			return ret;
 		}
