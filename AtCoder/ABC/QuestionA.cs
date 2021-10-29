@@ -796,6 +796,16 @@ namespace AtCoder.ABC {
 			return op.Pow(a, b);
 		}
 
+		public static T Choose<T>(T n, T r) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
+			var op = IMathArithmeticOperator<T>.GetOperator();
+			return op.Choose(n, r);
+		}
+
+		public static T Factorial<T>(T a) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
+			var op = IMathArithmeticOperator<T>.GetOperator();
+			return op.Factorial(a);
+		}
+
 		public static int Get2PowerIndexRoundingOff<T>(T n) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 			var op = IMathArithmeticOperator<T>.GetOperator();
 			var powerIndex = 0;
