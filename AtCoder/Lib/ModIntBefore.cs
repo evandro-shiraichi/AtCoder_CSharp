@@ -4,7 +4,7 @@ using System.Text;
 
 namespace AtCoder.Lib
 {
-	class ModInt
+	class ModIntBefore
 	{
 		private readonly int MAX;
 		private readonly long MOD;
@@ -15,7 +15,7 @@ namespace AtCoder.Lib
 
 		public long Number;
 
-		public ModInt(long integer, long mod = 1000000007, int max = 510000)
+		public ModIntBefore(long integer, long mod = 1000000007, int max = 510000)
 		{
 			Number = integer;
 			MOD = mod;

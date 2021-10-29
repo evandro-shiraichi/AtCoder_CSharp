@@ -40,6 +40,32 @@ namespace AtCoder.Lib
 
 	static class PermutationsNotSaiki
 	{
+		public static IEnumerable<IList<int>> GetAllPermutaionsInt(int max) {
+			var queue = new Queue<(List<int>, HashSet<int>)>();
+
+			queue.Enqueue((new List<int>(), new HashSet<int>()));
+
+			while (queue.Any()) {
+				var (nowPerm, yet) = queue.Dequeue();
+
+				if(nowPerm.Count == max) {
+					yield return nowPerm;
+					continue;
+				}
+
+				for(int i = 0; i < max; i++) {
+					if (yet.Contains(i))
+						continue;
+
+					var newYet = new HashSet<int>(yet);
+					var newList = new List<int>(nowPerm);
+					newYet.Add(i);
+					newList.Add(i);
+					queue.Enqueue((newList, newYet));
+				}
+			}
+		}
+
 		public static IEnumerable<IEnumerable<int>> GetAllPermutationStr(int n)
 		{
 			var stack = new Stack<(string now, int yet)>();
