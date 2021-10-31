@@ -24,6 +24,64 @@ namespace AtCoder.ABC {
 		public static readonly int InverseMax = 510000;
 	}
 
+	class MultiBinaryTree<T> : IEnumerable<T>
+		where T : IComparable<T> {
+		readonly SortedSet<(T val, long id)> sortedSet_ = new SortedSet<(T, long)>();
+		private long id_ = int.MinValue;
+
+		public void Add(T val) {
+			sortedSet_.Add((val, id_));
+			id_++;
+		}
+
+		public void Remove(T val) {
+			var min = GetViewBetween(val, val).Min.id;
+			sortedSet_.Remove((val, min));
+		}
+
+		public bool Contains(T val) {
+			return GetViewBetween(val, val).Count > 0;
+		}
+
+		public void Clear() {
+			sortedSet_.Clear();
+		}
+
+		public bool Any() {
+			return sortedSet_.Count > 0;
+		}
+
+		public SortedSet<(T val, long id)> GetViewBetween(T min, T max) {
+			return sortedSet_.GetViewBetween((min, long.MinValue), (max, long.MaxValue));
+		}
+
+		public T MaxBetween(T min, T max) {
+			return GetViewBetween(min, max).Max.val;
+		}
+
+		public T MinBetween(T min, T max) {
+			return GetViewBetween(min, max).Min.val;
+		}
+
+		public int CountBetween(T min, T max) {
+			return GetViewBetween(min, max).Count;
+		}
+
+		public T Max => sortedSet_.Max.val;
+
+		public T Min => sortedSet_.Min.val;
+
+		public int Count => sortedSet_.Count;
+
+		public IEnumerator<T> GetEnumerator() {
+			return sortedSet_.Select(x => x.val).GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator() {
+			return sortedSet_.Select(x => x.val).GetEnumerator();
+		}
+	}
+
 	class CompressArray<T> : IEnumerable<(long, T)> {
 		private readonly SortedSet<long> sortedSet_ = new SortedSet<long>();
 		private readonly T default_;
@@ -103,7 +161,7 @@ namespace AtCoder.ABC {
 
 	class PrefixSumArray<T> : IEnumerable<T>
 		where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
-		readonly IMathArithmeticOperator<T> math_;
+		static readonly IMathArithmeticOperator<T> math_ = IMathArithmeticOperator<T>.GetOperator();
 
 		int length_;
 		public int Count {
@@ -131,8 +189,6 @@ namespace AtCoder.ABC {
 		public PrefixSumArray(int length) : this(new T[length]) { }
 
 		public PrefixSumArray(T[] array) {
-			math_ = IMathArithmeticOperator<T>.GetOperator();
-
 			length_ = array.Length;
 			array_ = array;
 		}
@@ -152,7 +208,7 @@ namespace AtCoder.ABC {
 	}
 
 	class PrefixSumMatrix<T> where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
-		readonly IMathArithmeticOperator<T> math_;
+		static readonly IMathArithmeticOperator<T> math_ = IMathArithmeticOperator<T>.GetOperator();
 
 		int h_;
 		int w_;
@@ -177,8 +233,6 @@ namespace AtCoder.ABC {
 		public PrefixSumMatrix(int h, int w) : this(h, w, new T[h, w]) { }
 
 		public PrefixSumMatrix(int h, int w, T[,] map) {
-			math_ = IMathArithmeticOperator<T>.GetOperator();
-
 			h_ = h;
 			w_ = w;
 			array_ = map;
@@ -277,168 +331,185 @@ namespace AtCoder.ABC {
 	}
 
 	class Dequeue<T> {
-		private int _capacity;
-		private T[] _array;
+		private T[] array_;
 
-		private int _firstIndex = 0;
-		private int _lastIndex = 1;
+		public int Count { get; private set; }
 
-		public Dequeue(int capacity = 16) {
-			_capacity = capacity;
-			_array = new T[_capacity];
+		private int left_ = 0;
+		private int right_ = 0;
+
+		public Dequeue(int capa = 4) {
+			array_ = new T[capa];
 		}
 
 		public T this[int i] {
 			get {
 				if (i < 0 || i >= Count)
 					throw new ArgumentOutOfRangeException();
-				return _array[ToIndex(_firstIndex + 1 + i)];
+
+				return array_[(left_ + i) % array_.Length];
 			}
+
 			set {
 				if (i < 0 || i >= Count)
 					throw new ArgumentOutOfRangeException();
-				_array[ToIndex(_firstIndex + 1 + i)] = value;
+
+				array_[(left_ + i) % array_.Length] = value;
 			}
 		}
 
-		public int Count {
-			get { return _lastIndex - _firstIndex - 1; }
-		}
+		public void PushLeft(T val) {
+			left_--;
 
-		public bool Any() {
-			return Count > 0;
-		}
+			if (left_ < 0)
+				left_ += array_.Length;
 
-		private int ToIndex(int index) {
-			index %= _capacity;
-			if (index < 0)
-				index += _capacity;
-			return index;
-		}
+			array_[left_] = val;
+			Count++;
 
-		public void PushBack(T data) {
-			if (_capacity == Count)
+			if (array_.Length == Count)
 				Resize();
-
-			_array[ToIndex(_lastIndex++)] = data;
 		}
 
-		public void PushFront(T data) {
-			if (_capacity == Count)
+		public void PushRight(T val) {
+			array_[right_] = val;
+			Count++;
+
+			right_++;
+			right_ %= array_.Length;
+
+			if (array_.Length == Count)
 				Resize();
-
-			_array[ToIndex(_firstIndex--)] = data;
 		}
 
-		public T PopBack() {
-			if (Any() == false)
-				throw new InvalidOperationException();
+		public T PopLeft() {
+			if (Count <= 0)
+				throw new Exception();
 
-			var ret = _array[ToIndex(_lastIndex - 1)];
-			_lastIndex--;
+			var ret = array_[left_];
+			array_[left_] = default;
+			left_++;
+			left_ %= array_.Length;
+			Count--;
+
+			if (Count == 0)
+				left_ = right_ = 0;
+
 			return ret;
 		}
 
-		public T PopFront() {
-			if (Any() == false)
-				throw new InvalidOperationException();
+		public T PopRight() {
+			if (Count <= 0)
+				throw new Exception();
 
-			var ret = _array[ToIndex(_firstIndex + 1)];
-			_firstIndex++;
+			right_--;
+
+			if (right_ < 0)
+				right_ += array_.Length;
+
+			var ret = array_[right_];
+			array_[right_] = default;
+			Count--;
+
+			if (Count == 0)
+				left_ = right_ = 0;
+
 			return ret;
 		}
 
 		private void Resize() {
-			var newArray = new T[_capacity * 2];
+			var temp = new T[array_.Length * 2];
 
-			for (int i = _firstIndex; i < _lastIndex - 1; i++) {
-				var index = i - _firstIndex;
-				newArray[index] = _array[ToIndex(i + 1)];
-			}
-			_firstIndex = -1;
-			_lastIndex = _capacity;
-			_capacity *= 2;
-			_array = newArray;
-		}
-	}
-
-	class PermutaionInt {
-		List<IList<int>> permuations_;
-		readonly int max_;
-
-		public PermutaionInt(int max) {
-			max_ = max;
-		}
-
-		public IEnumerable<IList<int>> GetAllPermutation() {
-			if (permuations_ is null) {
-				permuations_ = new List<IList<int>>();
-				DFS(new Stack<int>(), new HashSet<int>());
+			for (int i = 0; i < Count; i++) {
+				temp[i] = this[i];
 			}
 
-			return permuations_;
+			array_ = temp;
+			left_ = 0;
+			right_ = Count;
 		}
 
-		void DFS(Stack<int> nowPerm, HashSet<int> yet) {
-			if (nowPerm.Count == max_) {
-				permuations_.Add(nowPerm.Reverse().ToArray());
-				return;
-			}
-
-			for (int i = 0; i < max_; i++) {
-				if (yet.Contains(i))
-					continue;
-
-				yet.Add(i);
-				nowPerm.Push(i);
-				DFS(nowPerm, yet);
-				nowPerm.Pop();
-				yet.Remove(i);
+		public IEnumerable<T> ToIEnumerable() {
+			for (int i = 0; i < Count; i++) {
+				yield return this[i];
 			}
 		}
 	}
 
-	class PermutationString {
-		List<string> permutations_;
-		string str_;
+	class PermutationsStr : Permutations<char> {
+		public PermutationsStr(string str) : base(str.ToArray()) { }
 
-		HashSet<string> yetString_ = new HashSet<string>();
-		HashSet<int> yetIndex_ = new HashSet<int>();
-
-		public PermutationString(string str) {
-			var temp = str.ToArray();
-			Array.Sort(temp);
-			str_ = new string(temp);
+		public new IEnumerable<string> Enumerate() {
+			foreach(var array in base.Enumerate()) {
+				yield return new string(array);
+			}
 		}
 
-		public IEnumerable<string> GetAllPermutation() {
-			if (permutations_ is null) {
-				permutations_ = new List<string>();
-				DFS("");
+		public new IEnumerable<string> EnumerateFromNow() {
+			foreach (var array in base.EnumerateFromNow()) {
+				yield return new string(array);
 			}
+		}
+	}
 
-			return permutations_;
+	class Permutations<T> where T : IComparable<T> {
+		private T[] initialArray_;
+		private T[] array_;
+
+		public Permutations(T[] array) {
+			array_ = new T[array.Length];
+			initialArray_ = new T[array.Length];
+			Array.Copy(array, array_, array.Length);
+			Array.Copy(array_, initialArray_, array_.Length);
 		}
 
-		void DFS(string nowS) {
-			if (yetString_.Contains(nowS))
-				return;
+		public void Reset() {
+			Array.Copy(initialArray_, array_, initialArray_.Length);
+		}
 
-			yetString_.Add(nowS);
+		private bool Next() {			
+			while (true) {
+				var left = -1;
 
-			if (nowS.Length == str_.Length) {
-				permutations_.Add(nowS);
-				return;
+				for (int i = array_.Length - 1; i > 0; i--) {
+					if (array_[i - 1].CompareTo(array_[i]) < 0) {
+						left = i - 1;
+						break;
+					}
+				}
+
+				if (left < 0)
+					return false;
+
+				var right = -1;
+
+				for (int i = array_.Length - 1; i > left; i--) {
+					if (array_[i].CompareTo(array_[left]) > 0) {
+						right = i;
+						break;
+					}
+				}
+
+				(array_[right], array_[left]) = (array_[left], array_[right]);
+
+				array_[(left + 1)..].AsSpan().Reverse();
+
+				return true;
 			}
+		}
 
-			for (int i = 0; i < str_.Length; i++) {
-				if (yetIndex_.Contains(i))
-					continue;
+		public IEnumerable<T[]> Enumerate() {
+			Array.Sort(array_);
 
-				yetIndex_.Add(i);
-				DFS(nowS + str_[i]);
-				yetIndex_.Remove(i);
-			}
+			do {
+				yield return array_;
+			} while (Next());
+		}
+
+		public IEnumerable<T[]> EnumerateFromNow() {
+			do {
+				yield return array_;
+			} while (Next());
 		}
 	}
 
@@ -484,11 +555,9 @@ namespace AtCoder.ABC {
 	}
 
 	class Flow<T> where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
-		IMathArithmeticOperator<T> math_;
+		static readonly IMathArithmeticOperator<T> math_ = IMathArithmeticOperator<T>.GetOperator();
 
 		public Flow(int node_size) {
-			math_ = IMathArithmeticOperator<T>.GetOperator();
-
 			V = node_size;
 			G = Enumerable.Repeat(0, V).Select(_ => new List<Edge>()).ToList();
 			level = Enumerable.Repeat(0, V).ToList();
@@ -632,6 +701,10 @@ namespace AtCoder.ABC {
 	}
 
 	static class ArrayHelper {
+		public static string ToSeparateString<T>(this IEnumerable<T> array, char separater = ' ') {
+			return string.Join(separater, array);
+		}
+
 		public static T[] CreateArray<T>(int w) {
 			var array = new T[w];
 			return array;
@@ -1085,17 +1158,17 @@ namespace AtCoder.ABC {
 			if (type == typeof(ModInt)) {
 				return new ModIntOperaor() as IMathArithmeticOperator<T>;
 			}
-			if (type == typeof(int)) {
-				return new IntOperator() as IMathArithmeticOperator<T>;
-			}
 			if (type == typeof(long)) {
 				return new LongOperator() as IMathArithmeticOperator<T>;
+			}
+			if (type == typeof(int)) {
+				return new IntOperator() as IMathArithmeticOperator<T>;
 			}
 			if (type == typeof(double)) {
 				return new DoubleOperator() as IMathArithmeticOperator<T>;
 			}
 
-			return null;
+			throw new NotImplementedException();
 		}
 
 		public T MaxValue { get; }
@@ -1122,32 +1195,31 @@ namespace AtCoder.ABC {
 		public T Min(T x, T y);
 	}
 
-	static class ChooseHelper<T, Top>
-			where Top : struct, IMathArithmeticOperator<T>
+	static class ChooseHelper<T>
 			where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 		public static Dictionary<(T n, T r), T> ChooseDictionary = new Dictionary<(T n, T r), T>();
 
-		public static T Choose(T n, T r) {
-			var op = new Top();
+		static readonly IMathArithmeticOperator<T> op_ = IMathArithmeticOperator<T>.GetOperator();
 
-			if ((n.CompareTo(r) < 0) || (n.CompareTo(op.Zero) < 0) || r.CompareTo(op.Zero) < 0) {
+		public static T Choose(T n, T r) {
+			if ((n.CompareTo(r) < 0) || (n.CompareTo(op_.Zero) < 0) || r.CompareTo(op_.Zero) < 0) {
 				throw new Exception();
 			}
 
-			r = op.Min(r, op.Substract(n, r));
+			r = op_.Min(r, op_.Substract(n, r));
 
 			if (ChooseDictionary.ContainsKey((n, r)))
 				return ChooseDictionary[(n, r)];
 
-			if (r.Equals(op.One)) {
+			if (r.Equals(op_.One)) {
 				return n;
-			} else if (r.Equals(op.Zero)) {
-				return op.One;
+			} else if (r.Equals(op_.Zero)) {
+				return op_.One;
 			}
 
-			var tempA = Choose(op.Substract(n, op.One), r);
-			var tempB = Choose(op.Substract(n, op.One), op.Substract(r, op.One));
-			var temp = op.Add(tempA, tempB);
+			var tempA = Choose(op_.Substract(n, op_.One), r);
+			var tempB = Choose(op_.Substract(n, op_.One), op_.Substract(r, op_.One));
+			var temp = op_.Add(tempA, tempB);
 
 			ChooseDictionary.Add((n, r), temp);
 
@@ -1416,7 +1488,7 @@ namespace AtCoder.ABC {
 		}
 
 		public int Choose(int n, int r) {
-			return ChooseHelper<int, IntOperator>.Choose(n, r);
+			return ChooseHelper<int>.Choose(n, r);
 		}
 
 		public int Divide(int x, int y) {
@@ -1493,7 +1565,7 @@ namespace AtCoder.ABC {
 		}
 
 		public long Choose(long n, long r) {
-			return ChooseHelper<long, LongOperator>.Choose(n, r);
+			return ChooseHelper<long>.Choose(n, r);
 		}
 
 		public long Divide(long x, long y) {
@@ -1570,7 +1642,7 @@ namespace AtCoder.ABC {
 		}
 
 		public double Choose(double n, double r) {
-			return ChooseHelper<double, DoubleOperator>.Choose(n, r);
+			return ChooseHelper<double>.Choose(n, r);
 		}
 
 		public double Divide(double x, double y) {
