@@ -732,7 +732,7 @@ namespace AtCoder.ABC {
 			return Fill(CreateArray<T>(w), initialValue);
 		}
 
-		public static T[][] CreateJagMap<T>(int h, int w) {
+		public static T[][] CreateJagArray<T>(int h, int w) {
 			var map = new T[h][];
 
 			for (int i = 0; i < h; i++)
@@ -741,7 +741,7 @@ namespace AtCoder.ABC {
 			return map;
 		}
 
-		public static T[][] FillJagMap<T>(this T[][] map, T initialValue) {
+		public static T[][] CreateJagArray<T>(this T[][] map, T initialValue) {
 			var h = map.Length;
 
 			for (int i = 0; i < h; i++)
@@ -750,7 +750,7 @@ namespace AtCoder.ABC {
 			return map;
 		}
 
-		public static T[][] FillJagMap<T>(this T[][] map, Func<T> initialValue) {
+		public static T[][] CreateJagArray<T>(this T[][] map, Func<T> initialValue) {
 			var h = map.Length;
 
 			for (int i = 0; i < h; i++)
@@ -759,7 +759,7 @@ namespace AtCoder.ABC {
 			return map;
 		}
 
-		public static T[,] CreateMapFilled<T>(int h, int w, T initialValue) {
+		public static T[,] CreateTwoDimentionalArrayFilled<T>(int h, int w, T initialValue) {
 			var map = new T[h, w];
 
 			for (int i = 0; i < h; i++)
@@ -769,7 +769,7 @@ namespace AtCoder.ABC {
 			return map;
 		}
 
-		public static T[,] CreateMapFilled<T>(int h, int w, Func<T> initialValue) {
+		public static T[,] CreateTwoDimentionalArrayFilled<T>(int h, int w, Func<T> initialValue) {
 			var map = new T[h, w];
 
 			for (int i = 0; i < h; i++)
@@ -872,6 +872,11 @@ namespace AtCoder.ABC {
 		public static T Choose<T>(T n, T r) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 			var op = IMathArithmeticOperator<T>.GetOperator();
 			return op.Choose(n, r);
+		}
+
+		public static T MultiChoose<T>(T n, T r) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
+			var op = IMathArithmeticOperator<T>.GetOperator();
+			return Choose<T>(op.Add(op.Substract(n, op.One), r), op.Substract(n, op.One));
 		}
 
 		public static T Factorial<T>(T a) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
