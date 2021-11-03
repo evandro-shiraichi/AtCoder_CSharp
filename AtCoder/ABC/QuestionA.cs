@@ -1709,6 +1709,50 @@ namespace AtCoder.ABC {
 			Y = y;
 		}
 
+		public bool Equals(Point other) {
+			return (X - other.X).Sgn() == 0 && (Y - other.Y).Sgn() == 0;
+		}
+
+		public int CompareTo(object obj) {
+			if (obj is Point pt) {
+				return CompareTo(pt);
+			}
+
+			throw new NotImplementedException();
+		}
+
+		public int CompareTo(Point other) {
+			if((X - other.X).Sgn() == 0) {
+				return (Y - other.Y).Sgn().CompareTo(0);
+			}
+
+			return (X - other.X).Sgn().CompareTo(0);
+		}
+
+		public static bool operator !=(Point a, Point b) {
+			return !a.Equals(b);
+		}
+
+		public static bool operator ==(Point a, Point b) {
+			return a.Equals(b);
+		}
+
+		public static bool operator <(Point a, Point b) {
+			return a.CompareTo(b) < 0;
+		}
+
+		public static bool operator <=(Point a, Point b) {
+			return a.CompareTo(b) <= 0;
+		}
+
+		public static bool operator >(Point a, Point b) {
+			return a.CompareTo(b) > 0;
+		}
+
+		public static bool operator >=(Point a, Point b) {
+			return a.CompareTo(b) >= 0;
+		}
+
 		private double Determinant(Point p) {
 			return (X * p.Y) - (Y * p.X);
 		}
@@ -1752,8 +1796,24 @@ namespace AtCoder.ABC {
 			return (p1.X + p2.X, p1.Y + p2.Y);
 		}
 
+		public static Point operator + (Point p1, double d) {
+			return p1 + (d, d);
+		}
+
+		public static Point operator +(double d, Point p1) {
+			return (d, d) + p1;
+		}
+
 		public static Point operator -(Point p1, Point p2) {
 			return (p1.X - p2.X, p1.Y - p2.Y);
+		}
+
+		public static Point operator -(Point p1, double d) {
+			return p1 - (d, d);
+		}
+
+		public static Point operator -(double d, Point p1) {
+			return (d, d) - p1;
 		}
 
 		public static Point operator *(Point p1, double k) {
@@ -1778,49 +1838,6 @@ namespace AtCoder.ABC {
 
 		public override string ToString() {
 			return $"({X}, {Y})";
-		}
-
-		public int CompareTo(object obj) {
-			if (obj is Point pt) {
-				return CompareTo(pt);
-			}
-
-			throw new NotImplementedException();
-		}
-
-		public int CompareTo(Point other) {
-			return this == other ? 0 : (this > other) ? 1 : -1;
-		}
-
-		public static bool operator !=(Point a, Point b) {
-			return !(a == b);
-		}
-
-		public static bool operator ==(Point a, Point b) {
-			return (a.X - b.X).Sgn() == 0 && (a.Y - b.Y).Sgn() == 0;
-		}
-
-		public static bool operator <=(Point a, Point b) {
-			return !(a > b);
-		}
-
-		public static bool operator >(Point a, Point b) {
-			return (a != b) && !(a < b);
-		}
-
-		public static bool operator >=(Point a, Point b) {
-			return !(a < b);
-		}
-
-		public static bool operator <(Point a, Point b) {
-			if ((a.X - b.X).Sgn() != 0)
-				return (a.X - b.X).Sgn() < 0;
-			else
-				return (a.Y - b.Y).Sgn() < 0;
-		}
-
-		public bool Equals(Point other) {
-			return (X == other.X) && (Y == other.Y);
 		}
 
 		public string ToString(string format, IFormatProvider formatProvider) {
