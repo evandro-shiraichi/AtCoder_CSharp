@@ -1,9 +1,50 @@
-﻿using System;
+﻿using AtCoder.ABC;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace AtCoder.Lib
-{
+namespace AtCoder.Lib {
+	class Dubling<TransitionType, ValueType> {
+		private readonly TransitionType[] transitions_;
+		private readonly ValueType initialValue_;
+		private readonly long max_;
+		private readonly Func<ValueType, TransitionType, ValueType> valueConverter_;
+
+		public Dubling(
+			long max,
+			TransitionType initialTransition,
+			ValueType initialValue,
+			Func<TransitionType, TransitionType> transitionFunc,
+			Func<ValueType, TransitionType, ValueType> valueConverter) {
+			initialValue_ = initialValue;
+			max_ = max;
+			valueConverter_ = valueConverter;
+			var powerIndex = MathHelper.Get2PowerIndexRoundingOff(max) + 1;
+			transitions_ = new TransitionType[powerIndex];
+			transitions_[0] = initialTransition;
+
+			for (int i = 1; i < powerIndex; i++) {
+				transitions_[i] = transitionFunc(transitions_[i - 1]);
+			}
+		}
+
+		public ValueType Query(long i) {
+			return QueryCore(initialValue_, i);
+		}
+
+		public ValueType QueryCore(ValueType now, long i) {
+			if (i > max_ || i < 0)
+				throw new Exception();
+
+			if (i == 0)
+				return now;
+
+			var powerIndex = MathHelper.Get2PowerIndexRoundingOff(i);
+			now = valueConverter_(now, transitions_[powerIndex]);
+			return QueryCore(now, i - MathHelper.Pow(2, powerIndex));
+		}
+	}
+
 	class LowestCommonAncestorTree
 	{
 		private readonly int n_;

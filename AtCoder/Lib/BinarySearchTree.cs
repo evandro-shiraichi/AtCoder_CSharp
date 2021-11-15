@@ -1,9 +1,68 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
-namespace AtCoder.Lib
-{
+namespace AtCoder.Lib {
+	class MultiBinaryTree<T> : IEnumerable<T>
+		where T : IComparable<T> {
+		readonly SortedSet<(T val, long id)> sortedSet_ = new SortedSet<(T, long)>();
+		private long id_ = int.MinValue;
+
+		public void Add(T val) {
+			sortedSet_.Add((val, id_));
+			id_++;
+		}
+
+		public void Remove(T val) {
+			var min = GetViewBetween(val, val).Min.id;
+			sortedSet_.Remove((val, min));
+		}
+
+		public bool Contains(T val) {
+			return GetViewBetween(val, val).Count > 0;
+		}
+
+		public void Clear() {
+			sortedSet_.Clear();
+		}
+
+		public bool Any() {
+			return sortedSet_.Count > 0;
+		}
+
+		public SortedSet<(T val, long id)> GetViewBetween(T min, T max) {
+			return sortedSet_.GetViewBetween((min, long.MinValue), (max, long.MaxValue));
+		}
+
+		public T MaxBetween(T min, T max) {
+			return GetViewBetween(min, max).Max.val;
+		}
+
+		public T MinBetween(T min, T max) {
+			return GetViewBetween(min, max).Min.val;
+		}
+
+		public int CountBetween(T min, T max) {
+			return GetViewBetween(min, max).Count;
+		}
+
+		public T Max => sortedSet_.Max.val;
+
+		public T Min => sortedSet_.Min.val;
+
+		public int Count => sortedSet_.Count;
+
+		public IEnumerator<T> GetEnumerator() {
+			return sortedSet_.Select(x => x.val).GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator() {
+			return sortedSet_.Select(x => x.val).GetEnumerator();
+		}
+	}
+
 
 	class MultiSetBinarySearchTree<T> : SetBinarySearchTree<T> where T : IComparable
 	{

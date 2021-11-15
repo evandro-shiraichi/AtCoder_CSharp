@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AtCoder.ABC;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -7,6 +8,90 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace AtCoder.Lib {
+
+	class SearchMinDistanceGraph<T> where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
+		private static IMathArithmeticOperator<T> op_ = IMathArithmeticOperator<T>.GetOperator();
+		private readonly int n_;
+
+		private Dictionary<int, T>[] edges_;
+
+		public SearchMinDistanceGraph(int n) {
+			n_ = n;
+			edges_ = new int[n_].Select(_ => new Dictionary<int, T>()).ToArray();
+		}
+
+		public void AddEdgeTwoWay(int a, int b, T cost) {
+			AddEdgeOneWay(a, b, cost);
+			AddEdgeOneWay(b, a, cost);
+		}
+
+		public void AddEdgeOneWay(int from, int to, T cost) {
+			edges_[from][to] = cost;
+		}
+
+		public void RemoveEdgeTwoWay(int a, int b) {
+			RemoveEdgeOneWay(a, b);
+			RemoveEdgeOneWay(b, a);
+		}
+
+		public void RemoveEdgeOneWay(int a, int b) {
+			if (edges_[a].ContainsKey(b))
+				edges_[a].Remove(b);
+		}
+
+		public IList<int> GetMinDistanceRoute(int goal, int[] routes) {
+			var stack = new Stack<int>();
+			stack.Push(goal);
+
+			var previous = routes[goal];
+
+			while (previous != -1) {
+				stack.Push(previous);
+				previous = routes[previous];
+			}
+
+			return stack.ToArray();
+		}
+
+		public (T[] minDist, int[] route) DoDijkstra(int start) {
+			var distances = Enumerable.Repeat(op_.MaxValue, n_).ToArray();
+			var isDetermined = Enumerable.Repeat(-1, n_).ToArray();
+			var edges = Enumerable.Range(0, n_).Select(x => new Dictionary<int, T>(edges_[x])).ToArray();
+			var pQueue = new PriorityQueue<(int to, int from, T cost), T>(x => x.cost, true);
+
+			pQueue.Enqueue((start, start, op_.Zero));
+			distances[start] = op_.Zero;
+
+			var count = 0;
+
+			while (pQueue.Count > 0) {
+				var (now, from, cost) = pQueue.Dequeue();
+
+				if (isDetermined[now] != -1)
+					continue;
+
+				isDetermined[now] = from;
+
+				// ノードがN回更新(取り出)されたらすでに終わっているはず
+				if (n_ == count++)
+					break;
+
+				foreach (var (next, edgeCost) in edges[now]) {
+					var nextCost = op_.Add(cost, edgeCost);
+					// 確定ノード、またはすでにコストが現在を下回っているノードは追加しない
+					if (isDetermined[next] != -1 || distances[next].CompareTo(nextCost) <= 0)
+						continue;
+
+					pQueue.Enqueue((next, now, nextCost));
+					distances[next] = nextCost;
+				}
+			}
+
+			isDetermined[start] = -1;
+			return (distances, isDetermined);
+		}
+	}
+
 	class DoDijkstraClass {
 		long[] DoDijkstra(List<(int To, int Cost)>[] edg, int start) {
 			var minCosts = Enumerable.Repeat(long.MaxValue, edg.Length).ToArray();

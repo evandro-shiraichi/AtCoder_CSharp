@@ -2,105 +2,111 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace AtCoder.Lib
-{
-	class Dequeue<T>
-	{
-		private int _capacity;
-		private T[] _array;
+namespace AtCoder.Lib {
+	class Dequeue<T> {
+		private T[] array_;
 
-		private int _firstIndex = 0;
-		private int _lastIndex = 1;
+		public int Count { get; private set; }
 
-		public Dequeue(int capacity = 16)
-		{
-			_capacity = capacity;
-			_array = new T[_capacity];
+		private int left_ = 0;
+		private int right_ = 0;
+
+		public Dequeue(int capa = 4) {
+			array_ = new T[capa];
 		}
 
-		public T this[int i]
-		{
-			get
-			{
+		public T this[int i] {
+			get {
 				if (i < 0 || i >= Count)
 					throw new ArgumentOutOfRangeException();
-				return _array[ToIndex(_firstIndex + 1 + i)];
+
+				return array_[(left_ + i) % array_.Length];
 			}
-			set
-			{
+
+			set {
 				if (i < 0 || i >= Count)
 					throw new ArgumentOutOfRangeException();
-				_array[ToIndex(_firstIndex + 1 + i)] = value;
+
+				array_[(left_ + i) % array_.Length] = value;
 			}
 		}
 
-		public int Count
-		{
-			get { return _lastIndex - _firstIndex - 1; }
-		}
+		public void PushLeft(T val) {
+			left_--;
 
-		public bool Any()
-		{
-			return Count > 0;
-		}
+			if (left_ < 0)
+				left_ += array_.Length;
 
-		private int ToIndex(int index)
-		{
-			index %= _capacity;
-			if (index < 0)
-				index += _capacity;
-			return index;
-		}
+			array_[left_] = val;
+			Count++;
 
-		public void PushBack(T data)
-		{
-			if (_capacity == Count)
+			if (array_.Length == Count)
 				Resize();
-
-			_array[ToIndex(_lastIndex++)] = data;
 		}
 
-		public void PushFront(T data)
-		{
-			if (_capacity == Count)
+		public void PushRight(T val) {
+			array_[right_] = val;
+			Count++;
+
+			right_++;
+			right_ %= array_.Length;
+
+			if (array_.Length == Count)
 				Resize();
-
-			_array[ToIndex(_firstIndex--)] = data;
 		}
 
-		public T PopBack()
-		{
-			if (Any() == false)
-				throw new InvalidOperationException();
+		public T PopLeft() {
+			if (Count <= 0)
+				throw new Exception();
 
-			var ret = _array[ToIndex(_lastIndex - 1)];
-			_lastIndex--;
+			var ret = array_[left_];
+			array_[left_] = default;
+			left_++;
+			left_ %= array_.Length;
+			Count--;
+
+			if (Count == 0)
+				left_ = right_ = 0;
+
 			return ret;
 		}
 
-		public T PopFront()
-		{
-			if (Any() == false)
-				throw new InvalidOperationException();
+		public T PopRight() {
+			if (Count <= 0)
+				throw new Exception();
 
-			var ret = _array[ToIndex(_firstIndex + 1)];
-			_firstIndex++;
+			right_--;
+
+			if (right_ < 0)
+				right_ += array_.Length;
+
+			var ret = array_[right_];
+			array_[right_] = default;
+			Count--;
+
+			if (Count == 0)
+				left_ = right_ = 0;
+
 			return ret;
 		}
 
-		private void Resize()
-		{
-			var newArray = new T[_capacity * 2];
+		private void Resize() {
+			var temp = new T[array_.Length * 2];
 
-			for (int i = _firstIndex; i < _lastIndex - 1; i++)
-			{
-				var index = i - _firstIndex;
-				newArray[index] = _array[ToIndex(i + 1)];
+			for (int i = 0; i < Count; i++) {
+				temp[i] = this[i];
 			}
-			_firstIndex = -1;
-			_lastIndex = _capacity;
-			_capacity *= 2;
-			_array = newArray;
+
+			array_ = temp;
+			left_ = 0;
+			right_ = Count;
+		}
+
+		public IEnumerable<T> ToIEnumerable() {
+			for (int i = 0; i < Count; i++) {
+				yield return this[i];
+			}
 		}
 	}
+
 }
