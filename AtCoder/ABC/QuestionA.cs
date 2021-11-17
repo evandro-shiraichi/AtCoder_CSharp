@@ -20,15 +20,15 @@ namespace AtCoder.ABC {
 	}
 
 	static class Constants {
-		public static readonly int Mod = 1000000007;
-		public static readonly int InverseMax = 510000;
-		public static readonly double Epsilon = 1e-10;
+		public const int Mod = 1000000007;
+		public const int InverseMax = 510000;
+		public const double Epsilon = 1e-10;
 	}
 
 	static class DPHelper {
 		public static T DoKnapSackDP<T>((int weight, T worth)[] ww, int maxWeight) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 			var op = IMathArithmeticOperator<T>.GetOperator();
-			
+
 			var dp = new T[maxWeight + 1];
 
 			for (int i = 0; i < ww.Length; i++) {
@@ -87,7 +87,7 @@ namespace AtCoder.ABC {
 
 		public static void Swap<T>(ref T a, ref T b) {
 			(a, b) = (b, a);
-        }
+		}
 	}
 
 	static class ArrayHelper {
@@ -294,7 +294,7 @@ namespace AtCoder.ABC {
 		}
 
 		public static T Max<T>(T a, T b) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
-			if(a.CompareTo(b) > 0) {
+			if (a.CompareTo(b) > 0) {
 				return a;
 			} else {
 				return b;
@@ -801,7 +801,7 @@ namespace AtCoder.ABC {
 			return Convert.ToUInt64(Value, provider);
 		}
 
-		public bool Equals( ModInt other) {
+		public bool Equals(ModInt other) {
 			return Value.Equals(other.Value);
 		}
 
@@ -810,23 +810,23 @@ namespace AtCoder.ABC {
 		}
 
 		public static ModInt operator +(ModInt x, long y) {
-			return new ModInt(ModIntHelper.ModOperator.Add(x, y));
+			return x.Value + y;
 		}
 
 		public static ModInt operator -(ModInt x, long y) {
-			return new ModInt(ModIntHelper.ModOperator.Substract(x, y));
+			return x.Value - y;
 		}
 
 		public static ModInt operator *(ModInt x, long y) {
-			return new ModInt(ModIntHelper.ModOperator.Multiply(x, y));
+			return x.Value * y;
 		}
 
 		public static ModInt operator /(ModInt x, long y) {
-			return new ModInt(ModIntHelper.ModOperator.Divide(x, y));
+			return x.Value * ModIntHelper.ModInv(y);
 		}
 
 		public static ModInt operator %(ModInt x, long y) {
-			return new ModInt(ModIntHelper.ModOperator.Mod(x, y));
+			return x.Value % y;
 		}
 
 		public static ModInt operator ++(ModInt x) {
@@ -842,7 +842,7 @@ namespace AtCoder.ABC {
 		}
 
 		public static ModInt operator -(ModInt x) {
-			return new ModInt(ModIntHelper.ModOperator.Negate(x));
+			return new ModInt(-x.Value);
 		}
 
 		public static bool operator ==(ModInt x, long y) {
@@ -854,7 +854,9 @@ namespace AtCoder.ABC {
 		}
 
 		public static implicit operator ModInt(long x) {
-			while (x < 0)
+			x %= Constants.Mod;
+
+			if (x < 0)
 				x += Constants.Mod;
 
 			return new ModInt(x % Constants.Mod);
@@ -896,7 +898,7 @@ namespace AtCoder.ABC {
 
 		public int Factorial(int x) {
 			var temp = 1;
-			for(int i = 2; i <= x; i++) {
+			for (int i = 2; i <= x; i++) {
 				temp *= i;
 			}
 
@@ -927,7 +929,7 @@ namespace AtCoder.ABC {
 			var ret = 1;
 			var temp = x;
 
-			for(int i = 1; i <= y; i <<= 1) {
+			for (int i = 1; i <= y; i <<= 1) {
 				if ((i & y) != 0)
 					ret *= temp;
 
@@ -1096,25 +1098,15 @@ namespace AtCoder.ABC {
 		public ModInt One => 1;
 
 		public ModInt Add(ModInt x, ModInt y) {
-			return (x.Value + y.Value) % Constants.Mod;
+			return x + y;
 		}
 
 		public ModInt BitShiftLeft(ModInt x, int y) {
-			long t =  x.Value << y;
-
-			while (t < 0)
-				t += Constants.Mod;
-
-			return t;
+			return x.Value << y;
 		}
 
 		public ModInt BitShiftRight(ModInt x, int y) {
-			long t = x.Value >> y;
-
-			while (t < 0)
-				t += Constants.Mod;
-
-			return t;
+			return x.Value >> y;
 		}
 
 		public ModInt Choose(ModInt n, ModInt r) {
@@ -1122,14 +1114,13 @@ namespace AtCoder.ABC {
 		}
 
 		public ModInt Divide(ModInt x, ModInt y) {
-			return x.Value * ModIntHelper.ModInv(y);
+			return x / y;
 		}
 
 		public ModInt Factorial(ModInt x) {
-			long temp = 1L;
+			ModInt temp = 1L;
 			for (long i = 2; i <= x.Value; i++) {
 				temp *= i;
-				temp %= Constants.Mod;
 			}
 
 			return temp;
@@ -1144,50 +1135,34 @@ namespace AtCoder.ABC {
 		}
 
 		public ModInt Mod(ModInt x, ModInt y) {
-			return x.Value % y.Value;
+			return x % y;
 		}
 
 		public ModInt Multiply(ModInt x, ModInt y) {
-			return (x.Value * y.Value) % Constants.Mod;
+			return x * y;
 		}
 
 		public ModInt Negate(ModInt x) {
-			long y = -x.Value;
-
-			while (y < 0)
-				y += Constants.Mod;
-
-			y %= Constants.Mod;
-
-			return y;
+			return -x;
 		}
 
 		public ModInt Pow(ModInt x, ModInt y) {
-			long res = 1L;
-			long a = x.Value;
+			ModInt res = 1L;
+			ModInt a = x.Value;
 			long n = y.Value;
 			while (n > 0) {
 				if ((n & 1) != 0) {
 					res *= a;
-					res %= Constants.Mod;
 				}
 
 				a *= a;
-				a %= Constants.Mod;
 				n >>= 1;
 			}
 			return res;
 		}
 
 		public ModInt Substract(ModInt x, ModInt y) {
-			long ret = x.Value - y.Value;
-
-			while (ret < 0)
-				ret += Constants.Mod;
-
-			ret %= Constants.Mod;
-
-			return ret;
+			return x - y;
 		}
 	}
 }
