@@ -1,11 +1,28 @@
-﻿using System;
+﻿using AtCoder.ABC;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace AtCoder.Lib
 {
-	class BitAllSearchs
-	{
+	class BitAllSearchs {
+		public static T AnswerBinarySearch<T>(T ok, T ng, T threshold, Func<T, bool> checker)
+		where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
+			var math = IMathArithmeticOperator<T>.GetOperator();
+			var two = math.Add(math.One, math.One);
+
+			while (math.Abs(math.Substract(ok, ng)).CompareTo(threshold) > 0) {
+				var c = math.Divide(math.Add(ok, ng), two);
+
+				if (checker(c)) {
+					ok = c;
+				} else {
+					ng = c;
+				}
+			}
+
+			return ok;
+		}
 		/// <summary>
 		/// ビット全探索
 		/// </summary>

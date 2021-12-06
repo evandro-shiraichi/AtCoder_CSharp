@@ -16,6 +16,36 @@ namespace AtCoder.ABC {
 	class QuestionA {
 		public static void Main(string[] args) {
 			var scanner = new Scanner();
+
+			var N = scanner.Int();
+
+			if (N % 2 != 0)
+				return;
+
+			var ans = new StringBuilder();
+
+			void DFS(int left, int right, Stack<char> str) {
+				if(str.Count == N) {
+					ans.AppendLine(str.Reverse().ToStr());
+					return;
+				}
+
+				if(left < N / 2) {
+					str.Push('(');
+					DFS(left + 1, right, str);
+					str.Pop();
+				}
+
+				if(right < left) {
+					str.Push(')');
+					DFS(left, right + 1, str);
+					str.Pop();
+				}
+			}
+
+			DFS(0, 0, new Stack<char>());
+
+			Console.Write(ans);
 		}
 	}
 
@@ -592,6 +622,10 @@ namespace AtCoder.ABC {
 
 		public T Max(T x, T y);
 		public T Min(T x, T y);
+
+		public T Abs(T x) {
+			return x.CompareTo(Zero) < 0 ? Negate(x) : x;
+		}
 	}
 
 	static class ChooseHelper<T>
