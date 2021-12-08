@@ -16,36 +16,6 @@ namespace AtCoder.ABC {
 	class QuestionA {
 		public static void Main(string[] args) {
 			var scanner = new Scanner();
-
-			var N = scanner.Int();
-
-			if (N % 2 != 0)
-				return;
-
-			var ans = new StringBuilder();
-
-			void DFS(int left, int right, Stack<char> str) {
-				if(str.Count == N) {
-					ans.AppendLine(str.Reverse().ToStr());
-					return;
-				}
-
-				if(left < N / 2) {
-					str.Push('(');
-					DFS(left + 1, right, str);
-					str.Pop();
-				}
-
-				if(right < left) {
-					str.Push(')');
-					DFS(left, right + 1, str);
-					str.Pop();
-				}
-			}
-
-			DFS(0, 0, new Stack<char>());
-
-			Console.Write(ans);
 		}
 	}
 
@@ -53,57 +23,6 @@ namespace AtCoder.ABC {
 		public const int Mod = 1000000007;
 		public const int InverseMax = 510000;
 		public const double Epsilon = 1e-10;
-	}
-
-	static class DPHelper {
-		public static T DoKnapSackDP<T>((int weight, T worth)[] ww, int maxWeight) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
-			var op = IMathArithmeticOperator<T>.GetOperator();
-
-			var dp = new T[maxWeight + 1];
-
-			for (int i = 0; i < ww.Length; i++) {
-				var (Width, Worth) = ww[i];
-				var newDp = new T[maxWeight + 1];
-
-				for (int j = 0; j <= maxWeight; j++) {
-					var temp1 = j - 1 >= 0 ? newDp[j - 1] : op.Zero;
-					var temp2 = j - Width >= 0 ? op.Add(dp[j - Width], Worth) : op.Zero;
-					newDp[j] = MathHelper.Max(temp1, dp[j], temp2);
-				}
-
-				dp = newDp;
-			}
-
-			return dp[maxWeight];
-		}
-
-		public static T DoLimitKnapSackDP<T>((int weight, T worth)[] ww, int maxWeight, int limitNum) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
-			var op = IMathArithmeticOperator<T>.GetOperator();
-
-			var dp = new T[limitNum + 1, maxWeight + 1];
-			var ans = op.Zero;
-
-			for (int k = 0; k < ww.Length; k++) {
-				var newDP = new T[limitNum + 1, maxWeight + 1];
-				var (weight, worth) = ww[k];
-				var max = op.Zero;
-
-				var maxJ = Math.Min(limitNum + 1, k + 1);
-
-				for (int j = 1; j < limitNum + 1; j++) {
-					for (int i = 1; i < maxWeight + 1; i++) {
-						var temp = i - weight >= 0 ? op.Add(dp[j - 1, i - weight], worth) : op.Zero;
-						max = MathHelper.Max(dp[j - 1, i], dp[j, i - 1], dp[j, i], temp);
-						newDP[j, i] = max;
-					}
-				}
-
-				ans.UpdateMax(max);
-				dp = newDP;
-			}
-
-			return ans;
-		}
 	}
 
 	static class HelperExtensions {
@@ -353,6 +272,31 @@ namespace AtCoder.ABC {
 
 		public static T Min<T>(T a, T b, T c, T d) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable {
 			return Min(d, Min(a, Min(b, c)));
+		}
+	}
+
+	class HashMap<TKey, TValue> : Dictionary<TKey, TValue> {
+		private Func<TKey, TValue> initializer_;
+
+		public HashMap() : this(_ => default) { }
+
+		public HashMap(Func<TKey, TValue> initializer) : this(initializer, 1024) { }
+
+		public HashMap(Func<TKey, TValue> initializer, int capacity) : base(capacity) {
+			initializer_ = initializer;
+		}
+
+		new public TValue this[TKey key] {
+			get {
+				if (TryGetValue(key, out TValue val))
+					return val;
+				else
+					return base[key] = initializer_(key);
+			}
+
+			set {
+				base[key] = value;
+			}
 		}
 	}
 
